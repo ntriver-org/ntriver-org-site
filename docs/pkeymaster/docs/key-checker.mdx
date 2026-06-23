@@ -1,0 +1,156 @@
+---
+sidebar_position: 1
+slug: /pkeymaster/key-checker
+---
+
+# Key Checker
+
+## Overview
+
+- **How to use it?** Instructions can be found [here](/pkeymaster).
+- The Key Checker option in PKeyMaster can validate Microsoft product keys (Windows, Office, Visual Studio, etc.) from the Windows 95 era to the latest releases.
+- By validation, we mean accurately determining the exact product a key belongs to, as well as its specific details.
+- This basic validation is done offline; however, the program includes additional options that you can enable to check further details:
+  - [Key Certification](/pkeymaster/key-certification)
+  - [Key Activation](key-activation)
+  - [MAK Count](mak-count)
+  - [Installation ID (IID)](pidgenx.dll#extracting-installation-id-iid)
+  - Confirmation ID (CID) [Batch API](cid-batch-api) - [Visual API](cid-visual-api)
+- You can use a key file to check multiple keys in a batch operation. The logging option will generate detailed CSV and TXT sheets for easy review.
+
+---
+
+## How does it work?
+
+When you enter a key into PKeyMaster to check its details, the tool categorizes the key format and checking method into two main types:
+
+1. **Pre-Windows 98 keys** (Mod7 Algorithm)
+2. **Windows 98 and later 5x5 keys** (PKey980, PKey986, PKey2005, and PKey2009 algorithms)
+
+---
+
+## 1. Pre-Windows 98 keys
+
+Check the details [here](decode-mod7-keys).
+
+---
+
+## 2. Windows 98 and later keys
+
+This method covers four algorithms:
+- **PKey980** Algorithm (BINK1998): Used in Windows 98, Windows XP, Office 2000, Office XP, etc.
+- **PKey986** Algorithm (BINK2002): Used in Server 2003, Office 2003, Office 2007, etc.
+- **PKey2005** Algorithm: Used in Windows Vista, Windows 7, Office 2010, etc.
+- **PKey2009** Algorithm: Used in Windows 8, Office 2013, and all newer products.
+
+**Key format**: `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`  
+**Allowed characters**: `BCDFGHJKMPQRTVWXY2346789`  
+The PKey2009 algorithm mandatorily includes the letter `N`, which is not present in previous algorithms.
+
+In the BINK 1998/2002 era, Microsoft typically stored BINK data in the `pidgen.dll` file for Windows, and the `MSO.DLL` file for Office. Other products used their own specific files.
+
+The problem with this approach was the frequent need to edit binary files to update key ranges and BINK data for various products, which was messy and difficult to manage.
+So, starting with Windows Vista beta build 5048, Microsoft introduced `pidgenx.dll` and utilized a signed file named `pkeyconfig.xml` (later renamed to `pkeyconfig.xrm-ms` in build 5259) to store key ranges and other necessary data. This approach made it much easier to maintain the information required to validate keys.
+
+In the first two builds (5048, 5071), `pkeyconfig.xml` had a different structure, but from build 5098 onwards, they adopted a more robust format that is still used today.
+In those early builds, they used the PKey986 algorithm in `pkeyconfig.xml` because the PKey2005 algorithm had not yet been developed.
+
+### Key validation methods
+
+### Windows Vista, Office 2010, and later products
+It is straightforward: we can simply use the product's `pkeyconfig.xrm-ms` file alongside `pidgenx.dll` to output the Digital Product ID in version 2, 3, or 4 formats, which can be easily parsed.
+
+### Pre-Vista products
+We can validate Pre-Vista product keys using one of three methods.
+
+#### [1] The `pidgen.dll` method
+One approach is to gather every unique `pidgen.dll` from pre-Vista builds and test a key against all of them until a match is found.  
+However, this method has a few issues. First, Office and some other products didn't use `pidgen.dll`; they used different files and structures, making it tedious to collect them all. Second, `pidgen.dll` often contains blocked key ranges in various builds, preventing us from viewing the details of those keys.  
+We can solve these issues by collecting all the BINK ID data and injecting it into a single `pidgen.dll` file using Resource Hacker. To bypass the blocked key ranges, we can utilize a `pidgen.dll` from a beta build that doesn't have these restrictions.
+You can [learn more about how to do that here](https://forums.mydigitallife.net/posts/1910492).
+
+#### [2] ECC math and key validation
+The methods used to generate BINK1998/2002 keys were known even during the Windows XP era, with tools shared on the [AntiWPA Forum](https://antiwpa.planet-dl.org/). More recently, these methods have been streamlined in [UMSKT](https://github.com/UMSKT/UMSKT).
+Product ID calculation for BINK1998 is relatively simple and can be verified in the [leaked source code for Windows XP](https://github.com/tongzx/nt5src/blob/daad8a087a4e75422ec96b7911f1df4669989611/Source/XPSP1/NT/base/ntsetup/pidgen/pidgen/pidgen.cpp).
+The source code for the BINK2002 `pidgen` is not publicly available, and calculating its Product ID is more complicated, requiring Elliptic-Curve Cryptography (ECC) math.
+
+#### [3] The `pidgenx.dll` method
+As mentioned earlier, `pidgenx.dll` can validate PKey980/986 keys, but the problem is that Microsoft never created `pkeyconfig` files for pre-Vista products.  
+To resolve this, we can patch `pidgenx.dll` to ignore the `pkeyconfig` signature and manually create a `pkeyconfig.xrm-ms` file for pre-Vista products using BINK ID data, as demonstrated by WitherOrNot [here](https://forums.mydigitallife.net/posts/1911263). A `pkeyconfig.xrm-ms` containing all known BINK IDs can be found [here](https://forums.mydigitallife.net/posts/1911937).
+Although we need to pad the `pkeyconfig` file with some random, unofficial data to satisfy the requirements of `pidgenx.dll`, we can filter out this dummy data in the final result, displaying only accurate and official information.
+
+#### Best method?
+Method 1 is somewhat slow because it requires two versions of `pidgen.dll` - one for BINK1998 and one for BINK2002. Furthermore, we must query each DLL twice (once to check if it is an OEM key and once for Non-OEM), leading to a total of up to 4 attempts if an OEM key belongs to BINK2002. Another bottleneck is that the `pidgen.dll` for BINK1998 is 32-bit only, and loading it from a 64-bit PowerShell process introduces further delays.
+While a query time of 2-3 seconds isn't terrible, the modern `pidgenx.dll` is much faster.
+
+Method 2 requires maintaining a large codebase and is relatively slow (around 500 ms) compared to `pidgenx.dll` (around 50 ms).
+
+In conclusion, the `pidgenx.dll` method is the best and fastest approach for key validation.
+
+---
+
+## How does key validation work with PidGenX.dll?
+
+Check the details [here](pidgenx.dll#how-does-it-work).
+
+---
+
+## Sample check in PKeyMaster
+
+**Windows XP**  
+```text
+Checking Key: XCYBK-2B3KV-G8T8F-WXJM7-WCTYT
+
+Product Key       : XCYBK-2B3KV-G8T8F-WXJM7-WCTYT
+Profile           : Pre-Vista (Windows 98 to XP - Office 2000 to 2007 - etc)
+Result            : Specified key is valid
+Product ID        : 00000-642-7344064-23997
+Extended PID      : 00000-00046-642-734406-00-1033-26200.0000-1612026
+Algorithm ID      : msft:rm/algorithm/pkey/980
+Group ID          : 46 (0x2E)
+Key ID            : 642734406 (0x264F5946)
+Channel ID        : 642
+Sequence          : 734406
+Bink              : Bink1998
+Hash              : 75917850
+Signature         : 34865666231815074
+License Type      : 0
+Upgrade Key       : No
+Product Match     : Windows XP For Legacy PCs (VLK)
+Product Match     : Windows XP Professional (VLK) (RTM) (SP1) (SP2) (SP3)
+Query Time        : 0.358 s
+```
+
+**Windows 10**
+```text
+Checking Key: VK7JG-NPHTM-C97JM-9MPGT-3V66T
+
+Product Key       : VK7JG-NPHTM-C97JM-9MPGT-3V66T
+Profile           : 28000 - Windows 11 24H2-25H2-26H2 - Server 2025 - Azure Local 24H2
+Result            : Specified key is valid
+Product ID        : 00330-80000-00000-AA018
+Extended PID      : 00000-03308-000-000000-00-1033-26200.0000-1712026
+Installation ID   : 004727610080850210881551831241585864353284373219179278411780885
+ActConfig ID      : msft2009:4de7cb65-cdf1-4de9-8ae8-e3cce27b9f2c&AAAAAHYGUKX33BIDnw==
+Activation ID     : 4de7cb65-cdf1-4de9-8ae8-e3cce27b9f2c
+Description       : Win 10 RTM Professional Retail
+Edition           : Professional
+Part number       : [TH]X19-98841
+Label ID          : 03308-000-000-000
+Key Type          : Retail
+EULA              : Retail
+Algorithm ID      : msft:rm/algorithm/pkey/2009
+Group ID          : 3308 (0xCEC)
+Key ID            : 0 (0x0)
+License Type      : 0
+Upgrade Key       : No
+PKey2009 Security : 5594737606063274
+PKey2009 Extra    : 0
+Query Time        : 0.144 s
+```
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

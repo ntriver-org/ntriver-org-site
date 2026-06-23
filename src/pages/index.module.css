@@ -1,23 +1,57 @@
-/**
- * CSS files with the .module.css suffix will be treated as CSS modules
- * and scoped locally.
- */
-
-.heroBanner {
-  padding: 4rem 0;
+.hero {
+  padding: 2rem 0;
   text-align: center;
-  position: relative;
-  overflow: hidden;
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
-  }
+[data-theme='dark'] .hero {
+  background-color: #1e1f22;
+  border-bottom: 1px solid #3f4147;
 }
 
-.buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+[data-theme='dark'] .hero h1,
+[data-theme='dark'] .hero p {
+  color: #dbdee1;
+}
+
+.cardSection {
+  padding: 2.5rem 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.card {
+  display: block;
+  padding: 1.5rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-top: 3px solid var(--ifm-color-primary);
+  border-radius: 6px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--ifm-background-surface-color);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  color: inherit;
+}
+
+.cardTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  color: var(--ifm-color-primary);
+}
+
+.cardDescription {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.55;
 }

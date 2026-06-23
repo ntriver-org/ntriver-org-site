@@ -1,150 +1,417 @@
+/**
+ * SS64-inspired theme (Screenshot matched)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600&display=swap');
+
 :root {
-  --ifm-color-primary: #a43b8d;
-  --ifm-color-primary-dark: #94357f;
-  --ifm-color-primary-darker: #8b3278;
-  --ifm-color-primary-darkest: #732963;
-  --ifm-color-primary-light: #b4419b;
-  --ifm-color-primary-lighter: #bc45a2;
-  --ifm-color-primary-lightest: #c55dae;
-  --ifm-table-cell-padding: 0.5rem;
+  --ifm-color-primary: #005a12;
+  --ifm-color-primary-dark: #004e0f;
+  --ifm-color-primary-darker: #00490e;
+  --ifm-color-primary-darkest: #003b0b;
+  --ifm-color-primary-light: #006615;
+  --ifm-color-primary-lighter: #006b16;
+  --ifm-color-primary-lightest: #007d1a;
+
+  --ifm-font-family-base: 'Noto Sans', system-ui, -apple-system, sans-serif;
+  --ifm-font-size-base: 15px;
+  --ifm-line-height-base: 1.65;
+
+  /* Page background is a very soft, clean off-white grey */
+  --ifm-background-color: #f8f9fa;
+  
+  /* Navbar is a more distinct, solid cool gray */
+  --ifm-navbar-background-color: #ced4da; 
+  --ifm-navbar-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  --ifm-navbar-link-color: #333333;
+  --ifm-navbar-padding-vertical: 0.5rem;
+
+  /* Sidebar background matches the page */
+  --ifm-sidebar-background-color: #f8f9fa;
+  --ifm-menu-color: #333333;
+  --ifm-menu-color-active: #005a12;
+
+  --ifm-toc-border-color: #e0e0e0;
+
+  --ifm-code-font-size: 93%;
+  --ifm-code-background: #e4e7eb;
+  --prism-background-color: #e4e7eb;
+
+  --ifm-link-color: #0060c0; /* Blue links */
+  --ifm-link-hover-color: #003e80;
+  --ifm-link-decoration: none;
+
+  --docusaurus-highlighted-code-line-bg: rgba(0, 90, 18, 0.08);
+
+  /* Navbar Pill Variables */
+  --custom-pill-bg: #e2e2e2;
+  --custom-pill-border: #a0a0a0;
+  --custom-pill-color: #000000;
+  
+  --custom-pill-active-bg: #00732e;
+  --custom-pill-active-border: #005a24;
+  --custom-pill-active-color: #ffffff;
+  
+  --custom-pill-hover-bg: #d0edda;
+  --custom-pill-hover-border: #00732e;
+  --custom-pill-hover-color: #00732e;
+
+  /* Sidebar Variables */
+  --custom-sidebar-border: #e0e0e0;
+  
+  --custom-sidebar-hover-bg: #d0edda;
+  --custom-sidebar-hover-color: #005a24;
+  
+  --custom-sidebar-active-bg: #00732e;
+  --custom-sidebar-active-color: #ffffff;
+  --custom-sidebar-active-hover-bg: #008f39;
+  
+  --custom-sidebar-category-active-color: #00732e;
 }
 
+/* Force Prism code blocks to use our darker gray in light mode */
+html[data-theme='light'] pre.prism-code,
+html[data-theme='light'] .theme-code-block {
+  background-color: #e4e7eb !important;
+}
+
+/* -- Dark mode - Discord Ash palette --------------------------- */
 [data-theme='dark'] {
-  --ifm-color-primary: #e685d0;
-  --ifm-color-primary-dark: #e376ca;
-  --ifm-color-primary-darker: #e067c4;
-  --ifm-color-primary-darkest: #da49b9;
-  --ifm-color-primary-light: #e994d6;
-  --ifm-color-primary-lighter: #eca3dc;
-  --ifm-color-primary-lightest: #f2c1e7;
+  --ifm-color-primary: #3ba55d;
+  --ifm-background-color: #313338;       /* Discord Ash main content bg */
+  --ifm-navbar-background-color: #2b2d31; /* Discord Ash sidebar/nav bg */
+  --ifm-sidebar-background-color: #2b2d31;
+  --ifm-background-surface-color: #1e1f22; /* Discord Ash deepest surface */
+  --ifm-menu-color: #dbdee1;             /* Discord Ash primary text */
+  --ifm-menu-color-active: #3ba55d;
+  --ifm-link-color: #5ba4e0;
+  --ifm-link-hover-color: #7bbde8;
+  --ifm-code-background: #1e1f22;
+  --ifm-hr-border-color: #3f4147;
+  --ifm-toc-border-color: #3f4147;
+
+  /* Navbar Pill Variables (Dark) */
+  --custom-pill-bg: #3a3a3a;
+  --custom-pill-border: #606060;
+  --custom-pill-color: #e0e0e0;
+  
+  --custom-pill-active-bg: #00732e;
+  --custom-pill-active-border: #005a24;
+  --custom-pill-active-color: #ffffff;
+  
+  --custom-pill-hover-bg: #1a3d28;
+  --custom-pill-hover-border: #00a050;
+  --custom-pill-hover-color: #4ddd88;
+
+  /* Sidebar Variables (Dark) */
+  --custom-sidebar-border: #3f4147;
+  
+  --custom-sidebar-hover-bg: #1a3d28;
+  --custom-sidebar-hover-color: #4ddd88;
+  
+  --custom-sidebar-active-bg: #00a050;
+  --custom-sidebar-active-color: #ffffff;
+  --custom-sidebar-active-hover-bg: #00b55a;
+  
+  --custom-sidebar-category-active-color: #4ddd88;
 }
 
-.navbar,
-.navbar-sidebar__brand {
-  background-image: url('/img/bg.png');
-  background-size: cover;
-  background-color: #000;
-  box-shadow: 0 0 10px #0006;
+/* -- Navbar Pill Buttons --------------------------------------- */
+.navbar {
+  box-shadow: var(--ifm-navbar-shadow);
+  border-bottom: 1px solid #b0b0b0;
 }
 
-.navbar__logo img {
-  filter: drop-shadow(1px 1px 2px #0003);
+/* Make navbar items look like the SS64 pill buttons */
+html .navbar .navbar__item.navbar__link {
+  background-color: var(--custom-pill-bg);
+  border: 1px solid var(--custom-pill-border);
+  border-radius: 6px;
+  margin: 0 4px;
+  padding: 4px 12px;
+  color: var(--custom-pill-color);
+  font-weight: 500;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.navbar__inner,
-.navbar__inner a,
-.navbar__inner a:hover,
-.navbar-sidebar__brand,
-.navbar-sidebar__brand a,
-.navbar-sidebar__brand a:hover {
+/* Active navbar item -> solid forest green background, white text */
+html .navbar .navbar__item.navbar__link--active {
+  background-color: var(--custom-pill-active-bg);
+  color: var(--custom-pill-active-color);
+  border-color: var(--custom-pill-active-border);
+}
+
+/* Hover -> slight green tint */
+html .navbar .navbar__item.navbar__link:not(.navbar__link--active):hover {
+  background-color: var(--custom-pill-hover-bg);
+  color: var(--custom-pill-hover-color);
+  border-color: var(--custom-pill-hover-border);
+}
+
+/* Click (mousedown) -> full green */
+html .navbar .navbar__item.navbar__link:not(.navbar__link--active):active {
+  background-color: var(--custom-pill-active-bg);
+  color: var(--custom-pill-active-color);
+  border-color: var(--custom-pill-active-border);
+}
+
+/* The brand/logo should not look like a pill */
+html .navbar .navbar__brand {
+  color: var(--ifm-color-primary);
+  font-weight: bold;
+}
+html .navbar .navbar__brand:hover {
+  color: var(--ifm-color-primary-dark);
+}
+
+/* -- Sidebar --------------------------------------------------- */
+.menu {
+  padding: 0;
+}
+
+/* Each sidebar link (and category wrapper) gets a bottom border to create the list look */
+html .menu .menu__link:not(.menu__link--sublist),
+html .menu .menu__list-item-collapsible {
+  border-bottom: 1px solid var(--custom-sidebar-border);
+}
+
+html .menu .menu__link {
+  color: var(--ifm-menu-color);
+  border-radius: 0;
+  padding: 8px 16px;
+}
+
+/* Active sidebar item - solid forest green background, white text */
+html .menu .menu__link--active {
+  color: var(--custom-sidebar-active-color);
+  font-weight: 600;
+  background-color: var(--custom-sidebar-active-bg);
+  border-left: none;
+}
+html .menu .menu__link--active:hover {
+  background-color: var(--custom-sidebar-active-hover-bg);
+}
+
+/* Parent category labels - Default state */
+html .menu .menu__list-item-collapsible > .menu__link--sublist {
+  font-weight: 700;
+  background-color: transparent;
+}
+
+/* Category label turns green ONLY when it or one of its children is active */
+html .menu .menu__list-item-collapsible > .menu__link--sublist.menu__link--active {
+  color: var(--custom-sidebar-category-active-color);
+}
+
+/* Parent category labels (Hover/Focus state) */
+html .menu .menu__list-item-collapsible:not(.menu__list-item-collapsible--active):hover,
+html .menu .menu__list-item-collapsible:not(.menu__list-item-collapsible--active):focus-within {
+  background-color: var(--custom-sidebar-hover-bg);
+}
+html .menu .menu__list-item-collapsible:not(.menu__list-item-collapsible--active):hover > .menu__link--sublist,
+html .menu .menu__list-item-collapsible:not(.menu__list-item-collapsible--active):focus-within > .menu__link--sublist {
+  color: var(--custom-sidebar-hover-color);
+  text-decoration: none;
+}
+
+/* When a category is actively being clicked (mouse down) */
+html .menu .menu__list-item-collapsible:active {
+  background-color: var(--custom-sidebar-active-bg);
+}
+html .menu .menu__list-item-collapsible:active > .menu__link--sublist {
+  color: var(--custom-sidebar-active-color);
+}
+
+/* When the category ITSELF is the active page */
+html .menu .menu__list-item-collapsible--active {
+  background-color: var(--custom-sidebar-active-bg);
+}
+html .menu .menu__list-item-collapsible--active > .menu__link--sublist.menu__link--active,
+html .menu .menu__list-item-collapsible--active:hover > .menu__link--sublist.menu__link--active {
+  color: var(--custom-sidebar-active-color);
+  background-color: transparent;
+}
+
+/* Remove default hover background for non-active, add subtle green tint */
+html .menu .menu__link:hover:not(.menu__link--active) {
+  background-color: var(--custom-sidebar-hover-bg);
+  color: var(--custom-sidebar-hover-color);
+}
+
+/* -- Links -- */
+a {
+  color: var(--ifm-link-color);
+}
+a:hover {
+  color: var(--ifm-link-hover-color);
+  text-decoration: underline;
+}
+
+/* -- Tables -- */
+table tr:nth-child(even) td,
+table tr:nth-child(even) th {
+  background-color: #f5f5f5;
+}
+[data-theme='dark'] table tr:nth-child(even) td {
+  background-color: #252525;
+}
+
+/* -- Inline code -- */
+:not(pre) > code {
+  background-color: var(--ifm-code-background);
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+[data-theme='dark'] :not(pre) > code {
+  border-color: #383838;
+}
+
+/* Content download buttons */
+.download-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.download-button,
+.download-button:visited {
+  align-items: center;
+  background-color: var(--custom-pill-active-bg);
+  border: 1px solid var(--custom-pill-active-border);
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: var(--custom-pill-active-color);
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 500;
+  justify-content: center;
+  min-width: 122px;
+  padding: 4px 12px;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.download-button:hover,
+.download-button:focus {
+  background-color: var(--custom-sidebar-active-hover-bg);
+  border-color: var(--custom-pill-active-border);
+  color: var(--custom-pill-active-color);
+  text-decoration: none;
+}
+
+/* -- Tooltips -- */
+.has-tooltip {
+  position: relative;
+}
+
+.has-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  background-color: #333;
   color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.navbar__inner .navbar__item {
-  transition: background var(--ifm-transition-fast);
-  border-radius: var(--ifm-global-radius);
-  margin: 0 .1rem;
-  padding: var(--ifm-navbar-item-padding-vertical) calc(var(--ifm-navbar-item-padding-horizontal) - .1rem);
-}
-
-.navbar__inner .navbar__item:hover,
-.navbar__inner .clean-btn:hover,
-.navbar-sidebar__brand .clean-btn:hover,
-.navbar__inner .dropdown__link:hover {
-  background-color: #fff3;
-}
-
-.navbar__inner .navbar__item.navbar__link--active,
-.navbar__inner .dropdown__link.dropdown__link--active {
-  background-color: #fff2;
-}
-
-.navbar-sidebar__close {
-  --ifm-color-emphasis-600: #fff;
-}
-
-.navbar__toggle.clean-btn:hover,
-.navbar-sidebar__close.clean-btn:hover {
-  background: none;
-}
-
-.navbar__inner .dropdown__menu {
-  background: #0c040ecc;
-  border: 1px solid #fff3;
-  backdrop-filter: blur(1rem);
-}
-
-.navbar__inner .github-button,
-.navbar__inner .discord-button {
-  width: 32px;
-  height: 32px;
-  font-size: 0;
-  margin: 0;
-  border-radius: var(--ifm-breadcrumb-border-radius);
-  padding: var(--ifm-navbar-item-padding-vertical) var(--ifm-navbar-item-padding-horizontal);
-}
-
-.navbar__inner .github-button *,
-.navbar__inner .discord-button * {
-  display: none;
-}
-
-.navbar__inner .github-button:before,
-.navbar__inner .discord-button:before {
+.has-tooltip:hover::before {
   content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 1px;
+  border: 5px solid transparent;
+  border-top-color: #333;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+[data-theme='dark'] .has-tooltip:hover::after {
+  background-color: #e4e7eb;
+  color: #1e1f22;
+}
+
+[data-theme='dark'] .has-tooltip:hover::before {
+  border-top-color: #e4e7eb;
+}
+
+/* -- Navbar icon buttons (GitHub, Discord) -- */
+.navbar-icon-link {
+  padding: 6px 8px !important;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-icon-link::before {
+  content: '';
+  display: block;
   width: 22px;
   height: 22px;
-  display: block;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  filter: var(--navbar-icon-filter, none);
 }
 
-.navbar__inner .discord-button:before {
-  background: url('/img/discord.svg') no-repeat;
-  margin: 3px 0 0 -7px;
+/* GitHub icon */
+.navbar-github-link::before {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E");
 }
 
-.navbar__inner .github-button:before {
-  background: url('/img/github.svg') no-repeat;
-  margin: 1px 0 0 -7px;
+/* Discord icon */
+.navbar-discord-link::before {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z'/%3E%3C/svg%3E");
 }
 
-table {
-  font-family: var(--ifm-font-family-monospace);
-  font-size: var(--ifm-code-font-size);
+/* Invert icons in dark mode to make them visible */
+[data-theme='dark'] .navbar-icon-link::before {
+  filter: invert(1);
 }
 
-.markdown h1:first-child {
-  --ifm-h1-font-size: 2.2rem;
+
+/* -- Pride Month footer border --------------------------------- */
+.footer {
+  border-top: 6px solid transparent;
+  border-image: linear-gradient(
+    to right,
+    #E40303 16.67%,
+    #FF8C00 16.67% 33.33%,
+    #FFED00 33.33% 50%,
+    #008026 50% 66.67%,
+    #004DFF 66.67% 83.33%,
+    #750787 83.33%
+  ) 1;
 }
 
-.sidebar-hr {
-  background-color: var(--ifm-toc-border-color);
-  margin: .5rem .75em;
+/* -- Footer compact layout ------------------------------------- */
+.footer {
+  padding: 20px 24px 16px;
 }
 
-.sidebar-hr > .sub {
-  margin-left: 1.25em;
+.footer .row.footer__links {
+  justify-content: center;
+  gap: 96px;
 }
 
-.pagination-nav {
-  display: none;
+.footer .row.footer__links .col.footer__col {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0;
 }
 
-.tabs__item {
-  border: 1px var(--ifm-toc-border-color) solid;
-  border-radius: var(--ifm-global-radius);
-  align-items: center;
-  text-align: center;
-  margin: .1875em;
-}
-
-.tabs__item--active {
-  background-color: var(--ifm-color-primary-darker);
-  border-color: var(--ifm-color-primary);
-  color: #fff;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-}
-
-.tabs__item--active:hover {
-  background-color: var(--ifm-color-primary-dark);
-  border-color: var(--ifm-color-primary-light);
+.footer .footer__bottom {
+  margin-top: 12px;
+  font-size: 13px;
+  opacity: 0.75;
 }

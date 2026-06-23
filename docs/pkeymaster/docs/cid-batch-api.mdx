@@ -1,0 +1,155 @@
+---
+sidebar_position: 6
+slug: /pkeymaster/cid-batch-api
+---
+
+# Confirmation ID (Batch API)
+
+## Overview
+
+- **How to use it?** Instructions can be found [here](/pkeymaster).
+- The Confirmation ID (Batch API) option retrieves a CID from Microsoft's `BatchActivation` endpoint using an Installation ID (IID).
+- If the CID cannot be retrieved via the Batch API, the script automatically falls back to the CID Visual API method.
+- This option works for Windows Vista / Office 2010 and later keys and IIDs.
+- The IID can be obtained from PidGenX.dll during key checking, or provided manually.
+- The CID can be used to activate Windows / Office products when a key's online activation limit has been reached, though activation via CID is not unlimited either.
+- This option consumes an activation slot.
+
+---
+
+## How does it work?
+
+A SOAP request is sent to Microsoft's `BatchActivation` endpoint at:
+
+```
+https://activation.sls.microsoft.com/BatchActivation/BatchActivation.asmx
+```
+
+The request uses `RequestType 1` (CID retrieval) and includes:
+
+- The Installation ID (IID) obtained from PidGenX during key checking, or provided manually (54 or 63 digits)
+- A fixed Advanced PID (Extended PID) used as the product identifier in the request
+- A request digest signed with HMAC-SHA256 using a fixed key
+
+The `RequestXml` body is Base64-encoded (UTF-16) before being sent. Microsoft's server responds with an `ActivationResponse` containing either:
+
+- A `CID` node, meaning the Confirmation ID was successfully retrieved.
+- An `ErrorCode` node, meaning the request failed.
+
+### Sample request
+
+```xml
+POST https://activation.sls.microsoft.com/BatchActivation/BatchActivation.asmx HTTP/1.1
+Host: activation.sls.microsoft.com
+Connection: close
+Content-Type: text/xml; charset=utf-8
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; MS Web Services Client Protocol 2.0.50727.5420)
+SOAPAction: http://www.microsoft.com/BatchActivationService/BatchActivate
+Content-Length: 1335
+
+Body:
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <BatchActivate xmlns="http://www.microsoft.com/BatchActivationService">
+      <request>
+        <Digest>ig7eJE1u9QAOhgiH6HKMZ+fXHdpBrrbaMMcIVVHgWPI=</Digest>
+        <RequestXml>PABBAGMAdABpAHYAYQB0AGkAbwBuAFIAZQBxAHUAZQBzAHQAIAB4AG0AbABuAHMAPQAiAGgAdAB0AHAAOgAvAC8AdwB3AHcALgBtAGkAYwByAG8AcwBvAGYAdAAuAGMAbwBtAC8ARABSAE0ALwBTAEwALwBCAGEAdABjAGgAQQBjAHQAaQB2AGEAdABpAG8AbgBSAGUAcQB1AGUAcwB0AC8AMQAuADAAIgA+AA0ACgAgACAAPABWAGUAcgBzAGkAbwBuAE4AdQBtAGIAZQByAD4AMgAuADAAPAAvAFYAZQByAHMAaQBvAG4ATgB1AG0AYgBlAHIAPgANAAoAIAAgADwAUgBlAHEAdQBlAHMAdABUAHkAcABlAD4AMQA8AC8AUgBlAHEAdQBlAHMAdABUAHkAcABlAD4ADQAKACAAIAA8AFIAZQBxAHUAZQBzAHQAcwA+AA0ACgAgACAAIAAgADwAUgBlAHEAdQBlAHMAdAA+ADwAUABJAEQAPgAwADAAMAAwADAALQAwADAAMQAzADgALQAyADAANwAtADEAMAA5ADAAMQA2AC0AMAAwAC0AMQAwADMAMwAtADIANgAxADAAMAAuADAAMAAwADAALQAwADkAMgAyADAAMgA2ADwALwBQAEkARAA+ADwASQBJAEQAPgA3ADIAMgAxADEAOQA2ADkAMQA5ADcAMAA0ADAANAAwADgAMQA2ADkAMwA3ADQAMAA0ADAAOQA2ADIAOAAxADQAMwA3ADIAMwAxADIAMwA1ADMAMwA1ADIAMgA3ADUANQA1ADIAMgA3ADQANwAyADQANwAyADMANgA1ADYAMQA8AC8ASQBJAEQAPgA8AC8AUgBlAHEAdQBlAHMAdAA+AA0ACgAgACAAPAAvAFIAZQBxAHUAZQBzAHQAcwA+AA0ACgA8AC8AQQBjAHQAaQB2AGEAdABpAG8AbgBSAGUAcQB1AGUAcwB0AD4A</RequestXml>
+      </request>
+    </BatchActivate>
+  </soap:Body>
+</soap:Envelope>
+```
+
+The decoded `RequestXml` looks like this:
+
+```xml
+<ActivationRequest xmlns="http://www.microsoft.com/DRM/SL/BatchActivationRequest/1.0">
+	<VersionNumber>2.0</VersionNumber>
+	<RequestType>1</RequestType>
+	<Requests>
+		<Request>
+			<PID>00000-00138-207-109016-00-1033-26100.0000-0922026</PID>
+			<IID>722119691970404081693740409628143723123533522755522747247236561</IID>
+		</Request>
+	</Requests>
+</ActivationRequest>
+```
+
+### Sample of a successful response
+
+```xml
+<?xml version="1.0" encoding="utf-16"?>
+<ActivationResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.microsoft.com/DRM/SL/BatchActivationResponse/1.0">
+	<VersionNumber>1.0</VersionNumber>
+	<ResponseType>1</ResponseType>
+	<BatchId>{9566c461-cea7-4d04-89a9-635966486da9}</BatchId>
+	<Responses>
+		<Response>
+			<PID>00000-00138-207-109016-00-1033-26100.0000-0922026</PID>
+			<ActivationRemaining>-1</ActivationRemaining>
+			<IID>722119691970404081693740409628143723123533522755522747247236561</IID>
+			<CID>062722477945868792870895165923782876591463700690</CID>
+		</Response>
+	</Responses>
+</ActivationResponse>
+```
+
+### Sample of a response with error
+
+```xml
+<?xml version="1.0" encoding="utf-16"?>
+<ActivationResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.microsoft.com/DRM/SL/BatchActivationResponse/1.0">
+	<VersionNumber>1.0</VersionNumber>
+	<ResponseType>1</ResponseType>
+	<BatchId>{0c3e4444-7751-44b3-977b-d9ef42b33d8d}</BatchId>
+	<Responses>
+		<Response>
+			<PID>00000-00138-207-109016-00-1033-26100.0000-0922026</PID>
+			<ActivationRemaining>-1</ActivationRemaining>
+			<IID>005950994222211946473620381251933522362211063114026142</IID>
+			<ErrorInfo>
+				<ErrorCode>0x67</ErrorCode>
+			</ErrorInfo>
+		</Response>
+	</Responses>
+</ActivationResponse>
+```
+
+---
+
+## Supported products
+
+- Windows Vista / Server 2008 and later versions
+- Office 2010 and later versions
+
+**Note**:
+
+- Only Windows / Office product keys that have a phone license are supported.
+- Key types such as `PGS:TB`, `Retail:TB:Eval`, `Retail:TB:Sub`, `ltPIN EULA`, etc. are not supported.
+- IID lengths of 54, and 63 digits are supported.
+
+---
+
+## CID Batch API results
+
+| Result  | Error Code | Meaning                                                        | Can CID Visual API retrieve CID? |
+| ------- | ---------- | -------------------------------------------------------------- | -------------------------------- |
+| Success |            | The Confirmation ID was retrieved successfully.                | Yes                              |
+| Failed  | 0x67       | The product key has been blocked.                              | No                               |
+| Failed  | 0xD5       | ROT activation override limit reached.                         | No                               |
+| Failed  | 0x68       | Unsupported or generated product key.                          | No                               |
+| Failed  | 0x71       | The key has exceeded its activation limit.                     | Maybe                            |
+| Failed  | 0x7F       | The MAK key has exceeded its activation limit.                 | Maybe                            |
+| Failed  | 0xD6       | DMAK activation override limit reached.                        | Maybe                            |
+| Failed  | 0x86       | The key is valid but its type is unsupported.                  | No                               |
+| Failed  | 0x90       | Invalid Installation ID.                                       | No                               |
+| Failed  | 0x8D       |                                                                | Maybe                            |
+| Failed  | 0x8F       |                                                                | Maybe                            |
+| Failed  | 0xC004C017 | The product key has been blocked for this geographic location. | Maybe                            |
+| Failed  | 0x80131600 | Invalid `AdvancedPid` or a server error.                       | Maybe                            |
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

@@ -1,0 +1,74 @@
+---
+sidebar_position: 16
+slug: /pkeymaster/file-details
+---
+
+# File Details
+
+PKeyMaster contains many types of files, let's divide them by their file types.
+
+---
+
+## Scripts
+
+The project contains .cmd and .ps1 scripts, you can open them with Notepad to see the details.
+
+```
+├── BIN
+│   └── Scripts
+│       ├── Libs
+│       │   ├── Common.ps1
+│       │   ├── DigitalProductId.ps1
+│       │   ├── Network.ps1
+│       │   └── WmiSppError.ps1
+│       ├── DecodePKey2009.ps1
+│       ├── DecodePKey980-PKey986.ps1
+│       ├── DepositCID.ps1
+│       ├── GetCID.ps1
+│       ├── GetCidBatchApi.ps1
+│       ├── GetCidVisualApi.ps1
+│       ├── GetIidCid.ps1
+│       ├── GetMSDMKey.ps1
+│       ├── GUI.ps1
+│       ├── KeyActivation.ps1
+│       ├── KeyCertification.ps1
+│       ├── KeyChecker.ps1
+│       ├── KeyCheckerPidGenX.ps1
+│       ├── KeyCheckerPre98.ps1
+│       ├── MakCount.ps1
+│       ├── PKeyConfigReader.ps1
+│       ├── ScanKeysInDPID.ps1
+│       ├── ScanKeysInFiles.ps1
+│       ├── ScanKeysInRegistry.ps1
+│       └── ScanKeysInSppTrustedStore.ps1
+├── PKeyMaster.ps1
+├── RunMe.cmd
+```
+
+---
+
+## PidGenX.dll
+
+The project uses pidgenx.dll files from Windows insider build 26040. Some patches are applied to the dll files to achieve some extra functionality. Check [here](pidgenx.dll#pidgenxdll-patches) to learn more.
+
+---
+
+## PublishLicense.xml
+
+`PKeyMaster\BIN\PublishLicense.xml`
+
+This file's original name is `Professional-Retail-1-pl-rtm.xrm-ms`, taken from the folder `C:\Windows\System32\spp\tokens\skus\Professional` from the installation of `Win11_25H2_English_x64_v2.iso`.
+
+`768984706b909479417b2368438909440f2967ff05c6a9195ed2667254e465e3 *Win11_25H2_English_x64_v2.iso`
+
+This file is used in the Key activation option to make an activation request. You can use any other pl file if you want as well.
+
+---
+
+## PKeyConfigs
+
+Check [here](pkeyconfig#pkeyconfigs-collection) to learn more.
+
+---
+
+Other files in PKeyMaster are pretty self explanatory.

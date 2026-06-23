@@ -1,0 +1,123 @@
+---
+sidebar_position: 3
+slug: /windows-powershell-downloads
+title: Windows PowerShell Download Links - Compatibility Guide for Windows & Server
+sidebar_label: Windows PowerShell
+description: Complete guide to download Windows PowerShell and Windows Management Framework (WMF) 5.1, 5.0, 4.0, 3.0, 2.0, and 1.0. Find official download links and check PowerShell version compatibility with Windows 11, Windows 10, Windows 7, Windows Vista, Windows XP, and all Windows Server versions.
+keywords:
+  - Windows PowerShell download
+  - Windows Management Framework download
+  - WMF 5.1 download
+  - WMF 5.0 download
+  - WMF 4.0 download
+  - WMF 3.0 download
+  - WMF 2.0 download
+  - PowerShell 1.0 download
+  - PowerShell for Windows 7
+  - PowerShell for Windows XP
+  - PowerShell for Windows Vista
+  - PowerShell version compatibility
+  - PowerShell Windows Server compatibility
+  - Windows PowerShell download links
+  - Microsoft PowerShell
+---
+
+# Windows PowerShell
+
+This page lists Windows PowerShell download links and shows which version ships with each Windows release, along with the newest version you can install manually. Useful for older Windows setups, legacy apps, or version compatibility checks.
+
+---
+
+## Download Links
+
+Windows PowerShell versions require a minimum .NET Framework version. Check the compatibility table below to find out which version you need.
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="/dotnet-framework-downloads" target="_blank" rel="noopener noreferrer">.NET Framework</a>
+</div>
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://www.microsoft.com/en-us/download/details.aspx?id=54616" target="_blank" rel="noopener noreferrer">Windows Management Framework 5.1</a>
+</div>
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://web.archive.org/web/20180112100529/https://www.microsoft.com/en-us/download/details.aspx?id=50395" target="_blank" rel="noopener noreferrer">Windows Management Framework 5.0</a>
+</div>
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://web.archive.org/web/20180203002300/https://www.microsoft.com/en-us/download/details.aspx?id=40855" target="_blank" rel="noopener noreferrer">Windows Management Framework 4.0</a>
+</div>
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://www.microsoft.com/en-us/download/details.aspx?id=34595" target="_blank" rel="noopener noreferrer">Windows Management Framework 3.0</a>
+</div>
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://www.catalog.update.microsoft.com/Search.aspx?q=KB968930" target="_blank" rel="noopener noreferrer">Windows Management Framework 2.0</a>
+  <a className="download-button" href="https://web.archive.org/web/20150113050743/http://support.microsoft.com/kb/968929" target="_blank" rel="noopener noreferrer">2.0 Notes</a>
+</div>
+
+On **Windows Server 2008 R2 Core**, PowerShell 2.0 must be enabled manually instead of using the installer above. Open CMD as admin and run:
+
+```
+start /w ocsetup MicrosoftWindowsPowerShell
+start /w ocsetup MicrosoftWindowsPowerShell-WOW64
+```
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://web.archive.org/web/20150208125108/http://support.microsoft.com/kb/926139" target="_blank" rel="noopener noreferrer">Windows PowerShell 1.0</a>
+</div>
+
+:::tip
+
+Disconnect VPN if archive page is not loading.
+
+:::
+
+---
+
+## Installation Notes
+
+- Windows PowerShell 5.1 is the last version in the 5.x line. Modern cross-platform PowerShell (PowerShell 6 and later) is a separate product and is not covered here.
+- Each WMF package includes the corresponding PowerShell version. For example, WMF 5.1 installs PowerShell 5.1.
+- WMF 3.0 must be uninstalled before installing WMF 5.1 on Windows 7 and Server 2008 R2, as having both installed leads to [bugs](https://learn.microsoft.com/en-us/previous-versions/powershell/scripting/windows-powershell/wmf/setup/install-configure?view=powershell-7.3#wmf-51-prerequisites-for-windows-server-2008-r2-sp1-and-windows-7-sp1).
+- WMF 4.0 must be installed before WMF 5.0 on Windows 7 and Server 2008 R2, as skipping it leads to [bugs](https://web.archive.org/web/20171208233034mp_/https://docs.microsoft.com/en-us/powershell/wmf/5.0/requirements).
+
+---
+
+## Windows Compatibility Table
+
+The table lists the version included with Windows and the newest Windows PowerShell version that can be installed on that Windows release.
+
+| Windows Version                                   | Preinstalled PowerShell Version | Latest Supported PowerShell Version                                                                                                                                                                                                                                      |
+| ------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Windows 10 1607 and all newer versions            | **5.1**                         | NA                                                                                                                                                                                                                                                                       |
+| Windows 10 1507 / 1511                            | **5.0**                         | None                                                                                                                                                                                                                                                                     |
+| Windows 8.1                                       | **4.0**                         | **5.0** <br /><br /> **5.1** (requires .NET Framework 4.5.2)                                                                                                                                                                                                             |
+| Windows 8                                         | **3.0**                         | None                                                                                                                                                                                                                                                                     |
+| Windows 7                                         | **2.0**                         | **3.0** (requires SP1, .NET Framework 4.0) <br /><br /> **4.0** (requires SP1, .NET Framework 4.5) <br /><br /> **5.0** (requires SP1, .NET Framework 4.5 and WMF 4.0) <br /><br /> **5.1** (requires SP1, .NET Framework 4.5.2 where WMF 3.0 **must not be installed**) |
+| Windows Vista                                     | None                            | **1.0** <br /><br /> **2.0** (requires SP1)                                                                                                                                                                                                                              |
+| Windows XP (NT 5.2 family) <br /> (x64 and IA-64) | None                            | **1.0** (requires .NET Framework 2.0) <br /><br /> **2.0** (requires SP2 and .NET Framework 2.0 SP1)                                                                                                                                                                     |
+| Windows XP (NT 5.1 family) <br /> (x86 and IA-64) | None                            | **1.0** (requires SP2 and .NET Framework 2.0) <br /><br /> **2.0** (requires SP3 and .NET Framework 2.0 SP1)                                                                                                                                                             |
+| Windows 2000 and older versions                   | None                            | None                                                                                                                                                                                                                                                                     |
+
+## Windows Server Compatibility Table
+
+| Windows Server Version                     | Preinstalled PowerShell Version                   | Latest Supported PowerShell Version                                                                                                                                                                                                                                                                  |
+| ------------------------------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Windows Server 2016 and all newer versions | **5.1**                                           | NA                                                                                                                                                                                                                                                                                                   |
+| Windows Server 2012 R2                     | **4.0**                                           | **5.0** <br /><br /> **5.1** (requires .NET Framework 4.5.2)                                                                                                                                                                                                                                         |
+| Windows Server 2012                        | **3.0**                                           | **4.0** <br /><br /> **5.0** (requires WMF 4.0) <br /><br /> **5.1** (requires .NET Framework 4.5.2)                                                                                                                                                                                                 |
+| Windows Server 2008 R2 (Full)              | **2.0**                                           | **3.0** (requires SP1, .NET Framework 4.0) <br /><br /> **4.0** (requires SP1, .NET Framework 4.5) <br /><br /> **5.0** (requires SP1, .NET Framework 4.5 and WMF 4.0) <br /><br /> **5.1** (requires SP1, .NET Framework 4.5.2 where WMF 3.0 **must not be installed**)                             |
+| Windows Server 2008 R2 (Core)              | None                                              | **2.0** (requires .NET Framework 2.0) <br /><br /> **3.0**, **4.0** (requires SP1, .NET Framework 2.0 and 4.5) <br /><br /> **5.0** (requires SP1, .NET Framework 2.0 and 4.5 and WMF 4.0) <br /><br /> **5.1** (requires SP1, .NET Framework 2.0 and 4.5.2 where WMF 3.0 **must not be installed**) |
+| Windows Server 2008                        | None <br /> (SBS comes with **1.0** preinstalled) | **1.0**, **2.0** <br /><br /> **3.0** (requires SP2, .NET Framework 4.0 and WMF 2.0)                                                                                                                                                                                                                 |
+| Windows Server 2003 R2                     | None                                              | **1.0** (requires .NET Framework 2.0) <br /><br /> **2.0** (requires SP2 and .NET Framework 2.0 SP1)                                                                                                                                                                                                 |
+| Windows Server 2003                        | None                                              | **1.0** (requires SP1 and .NET Framework 2.0) <br /><br /> **2.0** (requires SP2 and .NET Framework 2.0 SP1)                                                                                                                                                                                         |
+| Windows 2000 and older versions            | None                                              | None                                                                                                                                                                                                                                                                                                 |

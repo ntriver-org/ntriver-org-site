@@ -6,26 +6,32 @@
 
 import { themes as prismThemes } from 'prism-react-renderer';
 
+// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'MAS',
-  tagline: 'Open-source Windows and Office activator featuring HWID, Ohook, TSforge, and Online KMS activation methods, along with advanced troubleshooting.',
+  title: 'NTriver.org',
+  tagline: 'Open-source software, technical guides, and archival resources for Microsoft products.',
   favicon: 'img/favicon.ico',
 
+  // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
+  future: {
+    v4: true, // Improve compatibility with the upcoming Docusaurus v4
+  },
+
   // Set the production url of your site here
-  url: 'https://massgrave.dev/',
+  url: 'https://ntriver.org',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
+  trailingSlash: false,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'massgravel', // Usually your GitHub org/user name.
-  projectName: 'massgrave.dev', // Usually your repo name.
+  organizationName: 'ntriver-org', // Usually your GitHub org/user name.
+  projectName: 'ntriver-org-site', // Usually your repo name.
 
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
-  trailingSlash: false,
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -41,12 +47,14 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          routeBasePath: '/', // Serve the docs at the site's root	
           sidebarPath: './sidebars.js',
+          routeBasePath: '/',
+          showLastUpdateAuthor: true,
+          showLastUpdateTime: true,
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/massgravel/massgrave.dev/tree/main/',
+            'https://github.com/ntriver-org/ntriver-org-site',
         },
         blog: {
           showReadingTime: true,
@@ -57,7 +65,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/massgravel/massgrave.dev/tree/main/',
+            'https://github.com/ntriver-org/ntriver-org-site',
           // Useful options to enforce blogging best practices
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
@@ -73,109 +81,86 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      // Replace with your project's social card
+      // image: 'img/docusaurus-social-card.jpg',
       colorMode: {
-        defaultMode: 'light',
-        disableSwitch: false,
         respectPrefersColorScheme: true,
       },
-      // Replace with your project's social card
-      image: 'img/card.png',
       navbar: {
-        title: 'MAS',
-        logo: {
-          alt: 'MAS',
-          src: 'img/logo.png',
-        },
+        title: 'NTriver.org',
+        // logo: {
+        //   alt: 'NTriver.org Logo',
+        //   src: 'img/logo.jpg',
+        // },
         items: [
           {
-            to: '/',
+            type: 'docSidebar',
+            sidebarId: 'pkeymasterSidebar',
             position: 'left',
-            label: 'Home',
-            activeBaseRegex: "^/$",
+            label: 'PKeyMaster',
           },
           {
-            to: '/genuine-installation-media',
+            type: 'docSidebar',
+            sidebarId: 'guidesSidebar',
             position: 'left',
-            label: 'Download Windows / Office',
+            label: 'Guides',
           },
           {
-            to: '/faq',
-            position: 'left',
-            label: 'FAQ',
-          },
-          {
-            to: '/troubleshoot',
+            type: 'docSidebar',
+            sidebarId: 'troubleshootSidebar',
             position: 'left',
             label: 'Troubleshoot',
           },
+          { to: '/blog', label: 'Blog', position: 'right' },
           {
-            type: 'dropdown',
-            label: 'More',
-            position: 'left',
+            href: 'https://github.com/ntriver-org/PKeyMaster',
+            position: 'right',
+            className: 'navbar-icon-link navbar-github-link',
+            'aria-label': 'GitHub',
+          },
+          {
+            href: 'https://discord.gg/476fzQ3mV3',
+            position: 'right',
+            className: 'navbar-icon-link navbar-discord-link',
+            'aria-label': 'Discord',
+          },
+        ],
+      },
+      footer: {
+        links: [
+          {
+            title: 'Projects',
             items: [
               {
-                label: 'Docs',
-                to: '/hwid',
-              },
-              {
-                label: 'Manual Activation',
-                to: '/manual_hwid_activation'
+                label: 'PKeyMaster',
+                to: '/pkeymaster',
               },
               {
                 label: 'Guides',
-                to: '/guide_links',
-              },
-              {
-                label: 'Unsupported Products Activation',
-                to: '/unsupported_products_activation',
-              },
-              {
-                to: '/news',
-                label: 'News',
-              },
-              {
-                label: 'MAS Changelog',
-                to: '/changelog',
-              },
-              {
-                label: 'Our Non-Piracy Site',
-                to: '/our_non-piracy_site',
-              },
-              {
-                label: 'Contribute',
-                to: '/contribute',
-              },
-              {
-                label: 'Credits',
-                to: '/credits',
+                to: '/guides',
               },
             ],
           },
-          { to: '/blog', label: 'Blog', position: 'right' },
           {
-            to: '/contactus',
-            position: 'right',
-            label: 'Contact Us',
-          },
-          {
-            href: 'https://discord.gg/j2yFsV5ZVC',
-            className: 'discord-button',
-            position: 'right',
-            label: 'Discord',
-            "title": 'Chat with us on Discord',
-          },
-          {
-            href: 'https://github.com/massgravel/Microsoft-Activation-Scripts',
-            className: 'github-button',
-            position: 'right',
-            label: 'GitHub',
-            "title": 'GitHub repository',
+            title: 'Support',
+            items: [
+              {
+                label: 'Discord',
+                href: 'https://discord.gg/476fzQ3mV3',
+              },
+              {
+                label: 'GitHub',
+                href: 'https://github.com/ntriver-org/PKeyMaster',
+              },
+            ],
           },
         ],
+        copyright: `Made with ❤️<br />© ${new Date().getFullYear()} NTriver.org`,
       },
       prism: {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
+        additionalLanguages: ['powershell'],
       },
     }),
 };

@@ -1,0 +1,55 @@
+---
+sidebar_position: 8
+slug: /pkeymaster/deposit-cid
+---
+
+# Deposit CID
+
+## Overview
+
+- **How to use it?** Instructions can be found [here](/pkeymaster).
+- The Deposit CID option activates an installed Windows or Office product by depositing a Confirmation ID (CID) into the system.
+- This is the final step of phone activation. Once you have a CID (obtained via the [CID Batch API](/pkeymaster/cid-batch-api) or [CID Visual API](/pkeymaster/cid-visual-api)), you use this option to actually apply it and complete activation.
+- This option requires the product to already be installed and in an unactivated state.
+
+---
+
+## How does it work?
+
+There are two scripts involved in this process.
+
+### GetIidCid.ps1
+
+This script handles product discovery and CID retrieval in one step. It:
+
+- Queries WMI for installed but unactivated Windows (`SoftwareLicensingProduct`) and Office (`OfficeSoftwareProtectionProduct`) products that have a partial product key.
+- Checks each discovered product for phone activation eligibility by querying the SL API for the `msft:sl/EUL/PHONE/PUBLIC` policy. Products that don't support phone activation are skipped.
+- For each eligible product, it collects the product name, class name, Activation ID, and Installation ID, then calls `GetCID.ps1` to automatically retrieve the Confirmation ID.
+
+### DepositCID.ps1
+
+Once a CID is obtained, this script deposits it into the system to complete activation. It:
+
+- Accepts the WMI class name, Activation ID, Installation ID, and Confirmation ID as parameters.
+- Queries WMI to locate the specific installed product matching the given Activation ID and Installation ID.
+- Calls `DepositOfflineConfirmationId` on the matched product to apply the CID and activate it.
+- Reports whether the deposit succeeded or failed with a return value.
+
+:::info
+
+On Windows 7 / Vista, or when an OSPP-based Office installation is present, administrator rights are required to deposit the CID.
+
+:::
+
+---
+
+## Supported products
+
+- Windows Vista / Server 2008 and later versions
+- Office 2010 and later versions
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

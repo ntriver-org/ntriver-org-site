@@ -1,0 +1,168 @@
+---
+sidebar_position: 11
+slug: /pkeymaster/decode-pkey2009-keys
+---
+
+# Decode PKey2009 Keys
+
+## Overview
+
+- **How to use it?** Instructions can be found [here](/pkeymaster).
+- The Decode PKey2009 option decodes the internal structure of a PKey2009 product key, extracting the Group ID, Serial, Security value, Checksum, Upgrade bit, and Extra bit.
+- Key Checker uses PidGenX.dll to validate a key, but also runs this manual decode in the background because PidGenX.dll does not show the Security and Extra values.
+- This option works for Windows 8 / Office 2013 and later versions (PKey2009 algorithm).
+- PKey2009 keys are easy to identify: they always contain an `N` in the key.
+
+---
+
+## How does it work?
+
+A PKey2009 key is a Base24-encoded number. Decoding it means converting that encoded form back into a plain integer, then reading each field out of it by position. The steps below walk through this using `VK7JG-NPHTM-C97JM-9MPGT-3V66T` as a real example.
+
+### Step 1: The alphabet and character mapping
+
+The PKey2009 alphabet has 24 characters (`BCDFGHJKMPQRTVWXY2346789`), each with a digit value from 0 to 23:
+
+```
+ 0  1  2  3  4  5  6  7  8  9 10 11
+ B  C  D  F  G  H  J  K  M  P  Q  R
+
+12 13 14 15 16 17 18 19 20 21 22 23
+ T  V  W  X  Y  2  3  4  6  7  8  9
+```
+
+The characters `A`, `E`, `I`, `O`, `U`, `1`, `5`, `S`, `L`, `Z`, and `0` are intentionally excluded to avoid visual confusion. `N` is also not in this alphabet. It has a special role explained next.
+
+**The role of N**
+
+Every PKey2009 key contains exactly one `N`. It is not treated as a regular character. Instead, its position in the 25-character key (0-indexed, ignoring dashes) is used as the very first digit of the Base24 number. This is how Microsoft encodes an extra value (the position itself) without adding an extra character to the key.
+
+Remove the dashes from `VK7JG-NPHTM-C97JM-9MPGT-3V66T`. The clean key is `VK7JGNPHTMC97JM9MPGT3V66T`.
+
+`N` is at index **5** (0-based: V=0, K=1, 7=2, J=3, G=4, N=5), so the first digit is `5`. The remaining 24 characters are each looked up in the alphabet:
+
+```
+N pos = 5
+V = 13,  K = 7,  7 = 21,  J = 6,  G = 4,
+P = 9,   H = 5,  T = 12,  M = 8,  C = 1,
+9 = 23,  7 = 21, J = 6,   M = 8,  9 = 23,
+M = 8,   P = 9,  G = 4,   T = 12, 3 = 18,
+V = 13,  6 = 20, 6 = 20,  T = 12
+```
+
+In PowerShell, this mapping is done using:
+
+```powershell
+$alpha = 'BCDFGHJKMPQRTVWXY2346789'
+$key   = 'VK7JG-NPHTM-C97JM-9MPGT-3V66T'
+$clean = $key.Replace('-', '')
+
+$digits = @([bigint]$clean.IndexOf('N')) + (
+    $clean.ToCharArray() |
+    Where-Object { $_ -ne 'N' } |
+    ForEach-Object { [bigint]$alpha.IndexOf($_) }
+)
+```
+
+### Step 2: Base24 decoding
+
+Those 25 digits are decoded into a single integer the same way you would convert a number from any base: start with 0, then for each digit multiply what you have by the base (24) and add the next digit. The first few steps look like this:
+
+```
+start:          0
+digit 5:        0 × 24 + 5   =       5
+digit 13 (V):   5 × 24 + 13  =     133
+digit 7  (K):  133 × 24 + 7  =    3199
+digit 21 (7): 3199 × 24 + 21 =   76797
+... and so on for all 25 digits
+```
+
+After all 25 digits, the result is a very large integer that contains all the key's fields packed together. It easily exceeds 64 bits.
+
+```powershell
+$num = $digits | ForEach-Object -Begin   { $acc = [bigint]0 } `
+                                -Process { $acc = $acc * 24 + $_ } `
+                                -End     { $acc }
+```
+
+Result:
+
+```text
+$num = 7409378619882335270147970423590124
+```
+
+### Step 3: Extract fields by shifting and masking
+
+All fields are packed into that number at known bit positions:
+
+| Field    | Start bit | Length | Mask               | Description |
+| -------- | --------- | ------ | ------------------ | ----------- |
+| Group    | 0         | 20     | `0xFFFFF`          | Identifies the product group. In PKeyconfig it is referred to as `RefGroupID`. |
+| Serial   | 20        | 30     | `0x3FFFFFFF`       | Sequential number within the group. Shown as `Key ID` in PKeyMaster Key Checker output. |
+| Security | 50        | 53     | `0x1FFFFFFFFFFFFF` | Also known as `Secret`. A 53-bit value used internally by Microsoft. This is what determines whether a key is genuine or generated. |
+| Checksum | 103       | 10     | `0x3FF`            | A 10-bit CRC over the rest of the payload. Used to verify the key structure is intact. |
+| Upgrade  | 113       | 1      | `0x1`              | `1` if this is an upgrade key, `0` otherwise. |
+| Extra    | 114       | 1      | `0x1`              | A reserved bit. `1` only in rare keys, `0` in the vast majority. |
+
+To extract a field, you shift the number right to bring it down to bit 0, then AND it with a mask to keep only its bits.
+
+A mask is a number made of exactly as many 1-bits as the field is wide. For example, Group is 20 bits wide, so its mask has twenty 1-bits (`0xFFFFF`).
+
+To see this with the actual value of `$num`, first convert it to binary (padded to 115 bits):
+
+```text
+0010110110101001111100000011000100101101110011110111101001010101000000000000000000000000000000000000000110011101100
+```
+
+The Group field sits at bits 0-19, meaning it's already at the very right. We just apply the mask to take the last 20 bits:
+
+```text
+$num (binary)  : 0010110110101001111100000011000100101101110011110111101001010101000000000000000000000000000000000000000110011101100
+mask (0xFFFFF) : 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111
+result         : 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110011101100
+```
+
+Extracted Group Value:
+- **Binary:** `110011101100`
+- **Decimal:** `3308`
+
+For Serial (bit 20, 30 bits wide): shift right by 20 to drop the Group bits first, then AND with `0x3FFFFFFF`. In this key the Serial field is all zeroes, so the result is **0**.
+
+In PowerShell the same logic applies to all fields at once:
+
+```powershell
+$group    = [int]  ($num -band 0xFFFFF)
+$serial   = [int]  (($num -shr 20)  -band 0x3FFFFFFF)
+$security = [int64](($num -shr 50)  -band 0x1FFFFFFFFFFFFF)
+$checksum = [int]  (($num -shr 103) -band 0x3FF)
+$upgrade  = [int]  (($num -shr 113) -band 0x1)
+$extra    = [int]  (($num -shr 114) -band 0x1)
+```
+
+**Result for `VK7JG-NPHTM-C97JM-9MPGT-3V66T`:**
+
+```text
+Group     : 3308
+Serial    : 0
+Security  : 5594737606063274
+Checksum  : 730
+Upgrade   : 0
+Extra     : 0
+```
+
+---
+
+## Note on Key Validation
+
+The steps outlined above only **decode** the key to its internal field structure. 
+
+To structurally **validate** the key, a 10-bit CRC is computed over the extracted data and compared against the `Checksum` field. If they match, the key is structurally correct.
+Because computing this specific CRC is a bit lengthy, those exact validation steps are not covered in this guide.
+
+PKeyMaster uses `PidGenX.dll` to natively validate the keys and return the primary details, but this manual decode process is still run in the background purely because `PidGenX.dll` does not show properties like the `Security` and `Extra` fields.
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

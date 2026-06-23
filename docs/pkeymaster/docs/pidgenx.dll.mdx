@@ -1,0 +1,453 @@
+---
+sidebar_position: 2
+slug: /pkeymaster/pidgenx.dll
+---
+
+# PidGenX.dll
+
+## Overview
+
+- PKeyMaster uses PidGenX.dll file to validate product keys.
+- This file was introduced in Windows Vista to validate keys. Before that, Windows used to come with the `PidGen.dll` file.
+- This file is located in the `C:\Windows\System32` folder.
+- The project uses PidGenX.dll files from Windows Insider build 26040. This build supports the newly added `PGS:TB` key type.
+- Using an Insider build file has some advantages: it doesn't have warbird obfuscation so we can easily patch it if needed, and it's slightly faster as well.
+- This page covers PidGenX.dll-specific details. To learn about key validation, check [Key Checker](key-checker).
+
+---
+
+## PidGenX.dll patches
+
+PKeyMaster applies the following patches to achieve some extra functionality.
+
+### Msvcrt Patch
+
+Applied to the 32-bit file so this 26040 build can run on older Windows versions.
+
+### ActConfigId Patch
+
+Applied to both files so it can reveal the hidden ActConfigId for a product key.  
+ActConfigId example: `msft2005:b793ff2d-9d80-407c-b521-85111c51028c&ABH1bD8BAAAAAAAA`  
+This ID is used in key certification and activation.
+
+### Signature Patch
+
+Applied to both files so we can use [custom](key-checker#3-pidgenxdll-method) pkeyconfig.xrm-ms files.
+
+---
+
+### How to patch?
+
+**Original Windows Insider build 26040 PidGenX.dll SHA-256 checksums:**
+
+```
+c81dbd2517f6c062aa3d27ebc3d19d06908eea4943a0c571f56862db19e42964 *pidgenx32original.dll
+9298b091747e0d3d8214476030c24cd3142509134db0fe73bec251ebe9a53354 *pidgenx64original.dll
+```
+
+**Patched PidGenX.dll SHA-256 checksums:** (Used in PKeyMaster)
+
+```
+8af34350c30bb85e1e93075da07dc023fe72be608bf43166d8217fdaced998b8 *pidgenx32.dll
+e4593a7b96339023f55bab9f1f45b2b1706dbcc81f71b8626f30c9bed17f6017 *pidgenx64.dll
+```
+
+You can patch the [original](https://app.box.com/s/jo7rrvwc9adw8kpnckfcwqkttzx6j8oo) files yourself using the following PowerShell command. The result would be an identical file to the one used in PKeyMaster.
+This way you can ensure exactly what is changed in the file.
+
+### 32-bit PidGenX.dll Patch
+
+<details>
+<summary>Click to open</summary>
+
+```powershell
+$bytes = [System.IO.File]::ReadAllBytes(".\pidgenx32original.dll")
+# Msvcrt patch
+$bytes[336] = 0x00
+$bytes[337] = 0x00
+$bytes[338] = 0x00
+$bytes[587256] = 0x00
+$bytes[587257] = 0x00
+$bytes[587259] = 0x5f
+$bytes[587260] = 0x6c
+$bytes[587261] = 0x69
+$bytes[587262] = 0x62
+$bytes[587263] = 0x6d
+$bytes[587264] = 0x5f
+$bytes[587266] = 0x73
+$bytes[587267] = 0x65
+$bytes[587268] = 0x32
+$bytes[587269] = 0x5f
+$bytes[587270] = 0x6c
+$bytes[587271] = 0x6f
+$bytes[587272] = 0x67
+$bytes[587273] = 0x31
+$bytes[587274] = 0x30
+$bytes[587275] = 0x00
+$bytes[587276] = 0x00
+$bytes[587277] = 0x00
+$bytes[587278] = 0x00
+$bytes[587279] = 0x00
+$bytes[587280] = 0x00
+$bytes[587281] = 0x00
+
+# Actconfig patch
+$bytes[42039] = 0xe5
+$bytes[42040] = 0x3d
+$bytes[42041] = 0x08
+$bytes[42042] = 0x00
+$bytes[582176] = 0x5e
+$bytes[582177] = 0xe8
+$bytes[582178] = 0x1e
+$bytes[582179] = 0xc0
+$bytes[582180] = 0xf7
+$bytes[582181] = 0xff
+$bytes[582182] = 0x85
+$bytes[582183] = 0xc0
+$bytes[582184] = 0x78
+$bytes[582185] = 0x3d
+$bytes[582186] = 0x8b
+$bytes[582187] = 0x4d
+$bytes[582188] = 0x08
+$bytes[582189] = 0x85
+$bytes[582190] = 0xc9
+$bytes[582191] = 0x74
+$bytes[582192] = 0x36
+$bytes[582193] = 0x8b
+$bytes[582194] = 0x09
+$bytes[582195] = 0x85
+$bytes[582196] = 0xc9
+$bytes[582197] = 0x74
+$bytes[582198] = 0x30
+$bytes[582199] = 0x50
+$bytes[582200] = 0x9c
+$bytes[582201] = 0x60
+$bytes[582202] = 0xe8
+$bytes[582207] = 0x58
+$bytes[582208] = 0x8d
+$bytes[582209] = 0x80
+$bytes[582210] = 0x83
+$bytes[582211] = 0x06
+$bytes[582214] = 0xba
+$bytes[582215] = 0x80
+$bytes[582219] = 0x66
+$bytes[582220] = 0x8b
+$bytes[582221] = 0x19
+$bytes[582222] = 0x66
+$bytes[582223] = 0x89
+$bytes[582224] = 0x18
+$bytes[582225] = 0x83
+$bytes[582226] = 0xc1
+$bytes[582227] = 0x02
+$bytes[582228] = 0x83
+$bytes[582229] = 0xc0
+$bytes[582230] = 0x02
+$bytes[582231] = 0x66
+$bytes[582232] = 0x85
+$bytes[582233] = 0xdb
+$bytes[582234] = 0x74
+$bytes[582235] = 0x03
+$bytes[582236] = 0x4a
+$bytes[582237] = 0x75
+$bytes[582238] = 0xec
+$bytes[582239] = 0x66
+$bytes[582240] = 0xc7
+$bytes[582244] = 0x61
+$bytes[582245] = 0x9d
+$bytes[582246] = 0x58
+$bytes[582247] = 0x56
+$bytes[582248] = 0xc3
+
+# Signature patch
+$bytes[101248] = 0x31
+$bytes[101249] = 0xc0
+$bytes[101250] = 0xc2
+$bytes[101251] = 0x18
+$bytes[101252] = 0x00
+$bytes[387625] = 0x31
+$bytes[387626] = 0xc0
+$bytes[387627] = 0xc2
+$bytes[387628] = 0x0c
+$bytes[387629] = 0x00
+[System.IO.File]::WriteAllBytes(".\pidgenx32.dll", $bytes)
+```
+
+</details>
+
+### 64-bit PidGenX.dll Patch
+
+<details>
+<summary>Click to open</summary>
+
+```powershell
+$bytes = [System.IO.File]::ReadAllBytes(".\pidgenx64original.dll")
+# Actconfig patch
+$bytes[344] = 0x00
+$bytes[345] = 0x00
+$bytes[346] = 0x00
+$bytes[20433] = 0x40
+$bytes[20434] = 0xa0
+$bytes[20435] = 0x09
+$bytes[20436] = 0x00
+$bytes[20855] = 0x9a
+$bytes[20856] = 0x9e
+$bytes[20857] = 0x09
+$bytes[20858] = 0x00
+$bytes[651285] = 0x4c
+$bytes[651286] = 0x8d
+$bytes[651287] = 0x15
+$bytes[651288] = 0xdc
+$bytes[651289] = 0x06
+$bytes[651290] = 0x01
+$bytes[651291] = 0x00
+$bytes[651292] = 0x4c
+$bytes[651293] = 0x8b
+$bytes[651294] = 0xd9
+$bytes[651295] = 0x41
+$bytes[651296] = 0xb9
+$bytes[651297] = 0x80
+$bytes[651298] = 0x00
+$bytes[651299] = 0x00
+$bytes[651300] = 0x00
+$bytes[651301] = 0x66
+$bytes[651302] = 0x41
+$bytes[651303] = 0x8b
+$bytes[651304] = 0x03
+$bytes[651305] = 0x66
+$bytes[651306] = 0x41
+$bytes[651307] = 0x89
+$bytes[651308] = 0x02
+$bytes[651309] = 0x49
+$bytes[651310] = 0x83
+$bytes[651311] = 0xc3
+$bytes[651312] = 0x02
+$bytes[651313] = 0x49
+$bytes[651314] = 0x83
+$bytes[651315] = 0xc2
+$bytes[651316] = 0x02
+$bytes[651317] = 0x66
+$bytes[651318] = 0x85
+$bytes[651319] = 0xc0
+$bytes[651320] = 0x74
+$bytes[651321] = 0x05
+$bytes[651322] = 0x41
+$bytes[651323] = 0xff
+$bytes[651324] = 0xc9
+$bytes[651325] = 0x75
+$bytes[651326] = 0xe6
+$bytes[651327] = 0x66
+$bytes[651328] = 0x41
+$bytes[651329] = 0xc7
+$bytes[651330] = 0x02
+$bytes[651331] = 0x00
+$bytes[651332] = 0x00
+$bytes[651333] = 0xe9
+$bytes[651334] = 0x02
+$bytes[651335] = 0x5c
+$bytes[651336] = 0xf6
+$bytes[651337] = 0xff
+
+# Signature patch
+$bytes[106241] = 0x31
+$bytes[106242] = 0xc0
+$bytes[106243] = 0xc3
+$bytes[434892] = 0x31
+$bytes[434893] = 0xc0
+$bytes[434894] = 0xc3
+[System.IO.File]::WriteAllBytes(".\pidgenx64.dll", $bytes)
+```
+
+</details>
+
+---
+
+## How does it work?
+
+To understand how PidGenX works, we can use PowerShell with `Add-Type` to call the functions directly. We will use the generic Windows 10 Pro key `VK7JG-NPHTM-C97JM-9MPGT-3V66T` and the system's default `pkeyconfig.xrm-ms` file.
+
+### Validating a Product Key
+
+We can use the `PidGenX` function to check if a key is valid and generate Digital Product IDs (DPID).
+
+The `PidGenX` function takes the following parameters:
+
+- `productKey` (the 25-character key) - **IN**
+- `pkeyconfig` (path to the config file) - **IN**
+- `mspid` (set to `"00000"`) - **IN**
+- `oemId` (OEM identifier, typically a `null` string pointer) - **IN**
+- `dpid2` (pre-allocated 50-byte buffer for the Product ID string) - **OUT**
+- `dpid3` (pre-allocated 164-byte buffer for the DigitalProductId blob) - **OUT**
+- `dpid4` (pre-allocated 1272-byte buffer for the DigitalProductId4 blob) - **OUT**
+
+Here is how you can do it:
+
+```powershell
+$Signature = @"
+using System.Runtime.InteropServices;
+
+public class PidGen {
+    [DllImport("pidgenx.dll", CharSet = CharSet.Unicode)]
+    public static extern int PidGenX(
+        string productKey,
+        string pkeyconfig,
+        string mspid,
+        string oemId,
+        [Out] byte[] dpid2,
+        [In, Out] byte[] dpid3,
+        [In, Out] byte[] dpid4);
+}
+"@
+Add-Type -TypeDefinition $Signature
+
+$key = "VK7JG-NPHTM-C97JM-9MPGT-3V66T"
+$pkeyconfig = "C:\Windows\System32\spp\tokens\pkeyconfig\pkeyconfig.xrm-ms"
+
+# Allocate byte arrays
+$dpid2 = [byte[]]::new(50)
+
+# DPID3 and DPID4 require their size to be set in the first bytes
+$dpid3 = [byte[]]::new(164); $dpid3[0] = 0xA4
+$dpid4 = [byte[]]::new(1272); $dpid4[0] = 0xF8; $dpid4[1] = 0x04
+
+# Call PidGenX
+$result = [PidGen]::PidGenX($key, $pkeyconfig, "00000", $null, $dpid2, $dpid3, $dpid4)
+
+if ($result -eq 0) {
+    Write-Host "Key is Valid!"
+
+    # Read Product ID from DPID3 (offset 8)
+    $productId = [System.Text.Encoding]::ASCII.GetString($dpid3, 8, 24).Split("`0")[0]
+    Write-Host "Product ID: $productId"
+
+    # Read Advanced PID from DPID4 (offset 8)
+    $advancedPid = [System.Text.Encoding]::Unicode.GetString($dpid4, 8, 128).Split("`0")[0]
+    Write-Host "Advanced PID: $advancedPid"
+
+    # Read Activation ID from DPID4 (offset 136)
+    $activationId = [System.Text.Encoding]::Unicode.GetString($dpid4, 136, 128).Split("`0")[0]
+    Write-Host "Activation ID: $activationId"
+} else {
+    Write-Host "Key is Invalid! Error code: $result"
+}
+```
+
+If the key is valid, `PidGenX` returns `0` (`PGX_OK`) and populates the `dpid2`, `dpid3`, and `dpid4` memory buffers.
+
+To learn how to fully decode these binary buffers, check the [Decode DigitalProductId](decode-digitalproductid) page.
+The manual examples in the code show how to read specific strings from memory offsets. For instance, `dpid3 + 8` points to the start of the `ProductId` string, and `dpid4 + 136` points to the `ActivationId`.
+
+### Extracting Installation ID (IID)
+
+Another useful function exported by PidGenX is `GetPKeyData`. It can generate an Installation ID (IID) for a product key, which can then be used to retrieve a confirmation ID (CID).
+
+The `GetPKeyData` function takes the following parameters:
+
+- `productKey` (the 25-character key) - **IN**
+- `pkeyconfig` (path to the config file, or `null` to auto-load system pkeyconfig.xrm-ms) - **IN**
+- `mspid` (set to `"00000"`) - **IN**
+- `unknown` (typically a `null` pointer) - **IN**
+- `hardwareId` (hardware binding, `0` for generic) - **IN**
+- `iid` (the resulting Installation ID string) - **OUT**
+- `edition` (the resulting Edition type string) - **OUT**
+- `channel` (the resulting Channel type string) - **OUT**
+- `partnum` (the resulting Part Number string) - **OUT**
+- `dpid2` (optional output buffer - receives the Product ID string, same as `dpid2` in `PidGenX`; pass `null` to skip) - **OUT**
+
+Here is the PowerShell code to extract the IID:
+
+```powershell
+$Signature = @"
+using System.Runtime.InteropServices;
+
+public class PKeyData {
+    [DllImport("pidgenx.dll", CharSet = CharSet.Unicode)]
+    public static extern int GetPKeyData(
+        string productKey,
+        string pkeyconfig,       // null = auto-load system pkeyconfig.xrm-ms
+        string mspid,
+        string unknown,
+        ulong hardwareId,
+        out string iid,
+        out string edition,
+        out string channel,
+        out string partnum,
+        string dpid2);           // null to skip; outputs DPID2 buffer
+}
+"@
+Add-Type -TypeDefinition $Signature
+
+$key = "VK7JG-NPHTM-C97JM-9MPGT-3V66T"
+$pkeyconfig = "C:\Windows\System32\spp\tokens\pkeyconfig\pkeyconfig.xrm-ms"
+
+$iid = ""
+$edition = ""
+$channel = ""
+$partnum = ""
+
+# Extract data
+$result = [PKeyData]::GetPKeyData($key, $pkeyconfig, "00000", $null, 0, [ref]$iid, [ref]$edition, [ref]$channel, [ref]$partnum, $null)
+
+if ($result -eq 0 -and $iid) {
+    Write-Host "Installation ID: $iid"
+    Write-Host "Edition: $edition"
+    Write-Host "Channel: $channel"
+    Write-Host "Part Number: $partnum"
+} else {
+    Write-Host "Failed to get IID! Error code: $result"
+}
+```
+
+This returns the Installation ID, Edition (e.g., `Professional`), Channel (e.g., `Retail`), and Part Number.
+
+### Extracting ActConfigId
+
+The `ActConfigId` is required for key activation and certification against Microsoft servers. Unlike the IID, it is not officially exported by any PidGenX function.
+
+However, since we are using a [patched](pidgenx.dll#actconfigid-patch) version of `PidGenX.dll`, this string is leaked into a static memory offset after a successful key validation.
+
+To do this, first use the patched `pidgenx64.dll` or `pidgenx32.dll` from PKeyMaster to validate a key. After a successful validation, you can run the following code in the same process to read it directly from the DLL's memory in PowerShell:
+
+```powershell
+# The offset where ActConfigId is stored in the patched 26040 build
+$is64Bit = [Environment]::Is64BitProcess
+$captureOffset = if ($is64Bit) { 0xAF6F8 } else { 0x8F4C2 }
+$dllName = if ($is64Bit) { "pidgenx64.dll" } else { "pidgenx32.dll" }
+
+# Get the base address of the loaded pidgenx dll
+$baseAddress = [System.Diagnostics.Process]::GetCurrentProcess().Modules |
+    Where-Object { $_.ModuleName -eq $dllName } |
+    Select-Object -ExpandProperty BaseAddress
+
+if ($baseAddress) {
+    $bufferPtr = [IntPtr]::Add($baseAddress, $captureOffset)
+
+    # Read the Unicode string from memory
+    $actConfigId = [System.Runtime.InteropServices.Marshal]::PtrToStringUni($bufferPtr)
+
+    # Validate the format
+    if ($actConfigId -match '^(?i)msft200[59]:[^\s]+$') {
+        Write-Host "ActConfig ID: $actConfigId"
+    } else {
+        Write-Host "ActConfig ID not found in memory."
+    }
+}
+```
+
+---
+
+## PidGenX.dll Error Codes
+
+| Decimal       | Hex          | Description                                                         |
+| ------------- | ------------ | ------------------------------------------------------------------- |
+| `-2147024809` | `0x80070057` | The parameter is incorrect                                          |
+| `-1979645695` | `0x8A010101` | Specified key is either invalid or couldn't find a matching profile |
+| `-1979645951` | `0x8A010001` | Specified key is valid but couldn't find a matching profile         |
+| `-2147024894` | `0x80070002` | Can't find specified pkeyconfig file                                |
+| `-2147024893` | `0x80070003` | Specified pkeyconfig path does not exist                            |
+| `15`          | `0x0000000F` | Specified key is blacklisted                                        |
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

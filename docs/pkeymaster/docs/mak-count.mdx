@@ -1,0 +1,144 @@
+---
+sidebar_position: 5
+slug: /pkeymaster/mak-count
+---
+
+# MAK Count
+
+## Overview
+
+- **How to use it?** Instructions can be found [here](/pkeymaster).
+- The MAK count option queries the remaining activation count for a MAK (Multiple Activation Key).
+- This option works for `Volume:MAK` keys of Windows Vista / Office 2010 and later.
+- This option does not consume an activation slot to check.
+
+---
+
+## How does it work?
+
+A SOAP request is sent to Microsoft's `BatchActivation` endpoint at:
+
+```
+https://activation.sls.microsoft.com/BatchActivation/BatchActivation.asmx
+```
+
+The request uses `RequestType 2` (MAK count query) and includes:
+
+- The Advanced PID (Extended PID) of the MAK key (obtained from PidGenX during key checking)
+- A request digest signed with HMAC-SHA256 using a fixed key
+
+The `RequestXml` body is Base64-encoded (UTF-16) before being sent. Microsoft's server responds with an `ActivationResponse` containing either:
+
+- A positive count, meaning the key has activations remaining.
+- `0` count, meaning the key has no activation count left.
+- `-1` count with an `ErrorCode`, meaning the key is blocked, invalid, or unsupported.
+
+:::tip
+
+Generated MAK keys may show a remaining count but cannot actually activate. Use the key certification option to verify whether a key is valid.
+
+:::
+
+### Sample request
+
+```xml
+POST https://activation.sls.microsoft.com/BatchActivation/BatchActivation.asmx HTTP/1.1
+Host: activation.sls.microsoft.com
+Connection: close
+Content-Type: text/xml; charset=utf-8
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; MS Web Services Client Protocol 2.0.50727.5420)
+SOAPAction: http://www.microsoft.com/BatchActivationService/BatchActivate
+Content-Length: 1175
+
+Body:
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <BatchActivate xmlns="http://www.microsoft.com/BatchActivationService">
+      <request>
+        <Digest>w0yCOnm7D33fAulncg5wo0Al3PvJic4axSSPBjfH8xg=</Digest>
+        <RequestXml>PABBAGMAdABpAHYAYQB0AGkAbwBuAFIAZQBxAHUAZQBzAHQAIAB4AG0AbABuAHMAPQAiAGgAdAB0AHAAOgAvAC8AdwB3AHcALgBtAGkAYwByAG8AcwBvAGYAdAAuAGMAbwBtAC8ARABSAE0ALwBTAEwALwBCAGEAdABjAGgAQQBjAHQAaQB2AGEAdABpAG8AbgBSAGUAcQB1AGUAcwB0AC8AMQAuADAAIgA+AA0ACgAgACAAPABWAGUAcgBzAGkAbwBuAE4AdQBtAGIAZQByAD4AMgAuADAAPAAvAFYAZQByAHMAaQBvAG4ATgB1AG0AYgBlAHIAPgANAAoAIAAgADwAUgBlAHEAdQBlAHMAdABUAHkAcABlAD4AMgA8AC8AUgBlAHEAdQBlAHMAdABUAHkAcABlAD4ADQAKACAAIAA8AFIAZQBxAHUAZQBzAHQAcwA+AA0ACgAgACAAIAAgADwAUgBlAHEAdQBlAHMAdAA+AA0ACgAgACAAIAAgACAAIAA8AFAASQBEAD4AMAAwADAAMAAwAC0AMAA1ADAANAA1AC0AMAAwADAALQAwADAAMAAwADAAMAAtADAAMwAtADEAMAAzADMALQAyADYAMgAwADAALgAwADAAMAAwAC0AMQA2ADQAMgAwADIANgA8AC8AUABJAEQAPgANAAoAIAAgACAAIAA8AC8AUgBlAHEAdQBlAHMAdAA+AA0ACgAgACAAPAAvAFIAZQBxAHUAZQBzAHQAcwA+AA0ACgA8AC8AQQBjAHQAaQB2AGEAdABpAG8AbgBSAGUAcQB1AGUAcwB0AD4A</RequestXml>
+      </request>
+    </BatchActivate>
+  </soap:Body>
+</soap:Envelope>
+```
+
+The decoded `RequestXml` looks like this:
+
+```xml
+<ActivationRequest xmlns="http://www.microsoft.com/DRM/SL/BatchActivationRequest/1.0">
+	<VersionNumber>2.0</VersionNumber>
+	<RequestType>2</RequestType>
+	<Requests>
+		<Request>
+			<PID>00000-05045-000-000000-03-1033-26200.0000-1642026</PID>
+		</Request>
+	</Requests>
+</ActivationRequest>
+```
+
+### Sample of a response with positive count
+
+```xml
+<?xml version="1.0" encoding="utf-16"?>
+<ActivationResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.microsoft.com/DRM/SL/BatchActivationResponse/1.0">
+	<VersionNumber>1.0</VersionNumber>
+	<ResponseType>2</ResponseType>
+	<BatchId>{f279360a-3ea9-4fff-b9ea-0c9f44612769}</BatchId>
+	<Responses>
+		<Response>
+			<PID>00000-05045-000-000000-03-1033-26200.0000-1642026</PID>
+			<ActivationRemaining>851419</ActivationRemaining>
+		</Response>
+	</Responses>
+</ActivationResponse>
+```
+
+### Sample of a response with error
+
+```xml
+<?xml version="1.0" encoding="utf-16"?>
+<ActivationResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.microsoft.com/DRM/SL/BatchActivationResponse/1.0">
+	<VersionNumber>1.0</VersionNumber>
+	<ResponseType>2</ResponseType>
+	<BatchId>{0789431e-2a01-48ec-aa82-d21db4e4a12b}</BatchId>
+	<Responses>
+		<Response>
+			<PID>00000-03291-043-000500-03-1033-26200.0000-1642026</PID>
+			<ActivationRemaining>-1</ActivationRemaining>
+			<ErrorInfo>
+				<ErrorCode>0x67</ErrorCode>
+			</ErrorInfo>
+		</Response>
+	</Responses>
+</ActivationResponse>
+```
+
+---
+
+## Supported products
+
+- Windows Vista / Server 2008 and later versions
+- Office 2010 and later versions
+
+**Note**:
+
+- Only `Volume:MAK` keys are supported for MAK count queries.
+- Generated MAK keys may show a remaining count but cannot actually activate. Use the key certification option to verify whether a key is valid.
+
+---
+
+## MAK count results
+
+| Remaining Count | Error Code | Meaning                                                                 |
+| --------------- | ---------- | ----------------------------------------------------------------------- |
+| Positive number |            | The key has activations remaining.                                      |
+| 0               |            | MAK activation limit reached. Activation via CID may still be possible. |
+| -1              | 0x67       | The product key has been blocked and cannot be activated by any means.  |
+| -1              | 0x86       | Unsupported product key.                                                |
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

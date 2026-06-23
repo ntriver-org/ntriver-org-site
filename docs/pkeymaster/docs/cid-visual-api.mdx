@@ -1,0 +1,162 @@
+---
+sidebar_position: 7
+slug: /pkeymaster/cid-visual-api
+---
+
+# Confirmation ID (Visual API)
+
+## Overview
+
+- **How to use it?** Instructions can be found [here](/pkeymaster).
+- The Confirmation ID (Visual API) option retrieves a CID from Microsoft's `VisualSupport` endpoint using an Installation ID (IID).
+- You can get a CID manually at https://visualsupport.microsoft.com/ by signing in with your Microsoft account, but the script lets you get a CID without login or captcha, and even without an IID (just a key). It also supports batch mode checks and CSV export.
+- The script automatically falls back to the CID Visual API method when CID cannot be retrieved from Batch API method.
+- This option works for Windows XP / Office XP and later keys and IIDs.
+- The IID can be obtained from PidGenX.dll during key checking, or provided manually.
+- The CID can be used to activate Windows / Office products when a key's online activation limit has been reached, though activation via CID is not unlimited either.
+- This option consumes an activation slot.
+
+---
+
+## How does it work?
+
+A JSON request is sent to Microsoft's `VisualSupport` endpoint at:
+
+```
+https://visualsupport.microsoft.com/api/productActivation/validateIID
+```
+
+The request is authenticated using:
+
+- A **Bearer token**: fetched from a local `BIN\CidToken.txt` file if present, otherwise retrieved from the shared token server at `https://cidtoken.ntriver.org/token.json`. Microsoft does not link the IID or the retrieved CID to the token's account, so a shared token is acceptable. [More info](#bearer-token).
+- A **DPoP JWT**: a proof-of-possession token signed with an ephemeral ECDSA P-256 key, generated per request to satisfy Microsoft's DPoP requirement.
+
+The request body includes:
+
+- The Installation ID (IID)
+- Fixed metadata fields: `ProductType`, `productGroup`, `productName`, `numberOfDigits`, `Country`, `Region`, `InstalledDevices`, `OverrideStatusCode`, `InitialReasonCode`
+
+Microsoft's server responds with a JSON object containing either:
+
+- A `cid` field with a value, meaning the Confirmation ID was successfully retrieved.
+- A `reasonCode` and `message` field, meaning the request failed.
+
+### Sample request
+
+```json
+POST https://visualsupport.microsoft.com/api/productActivation/validateIID HTTP/1.1
+Host: visualsupport.microsoft.com
+Connection: close
+Content-Type: application/json; charset=utf-8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJub25jZSI6Ikd6NEc0Y1ZVLTFjeHJIZkJSMXp1M0lYWnBzMEk5OFBYbEh5QVl4T045cDAiLCJhbGciOiJSUzI1NiIsIng1dCI6IndoMDZzRWt6TEhKNXNOTmFVeVJZMl82TzhLMCIsImtpZCI6IndoMDZzRWt6TEhKNXNOTmFVeVJZMl82TzhLMCJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC9hMTEwODcyNC1lYjk4LTQ1ZWQtYTE2YS1kZDMzZTYyM2Y5ODQvIiwiaWF0IjoxNzgxMzU5NTQwLCJuYmYiOjE3ODEzNTk1NDAsImV4cCI6MTc4MTM2Mzc4NSwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsicDEiLCJwZmRyIl0sImFpbyI6IkFaUUFhLzhjQUFBQXFxaWFFNHJsZ3FpNFEyUllPTzFpNXBWam54ZWFnTG1XSnM3S2ZINSttYkppS3Z6OFozRzF5ZWhNbXFRRmRLQks3b3dOeWNYSDRCWWw3ZjFIU21KV3FjV1lGcUtZOWRDVUxENys4UGF5VkVxQW40OEdUdTErRkY1MWhjL0luRXhGMkdNK004ZVNTWll6Q1NCWHdFNzFXbWhSdlFHeW1jVVk4d1RzUEozOGpEdldpVFUzK3lWZHA0amo0L1pHZ2I1RSIsImFtciI6WyJwd2QiLCJtZmEiXSwiYXBwX2Rpc3BsYXluYW1lIjoiVmlzdWFsQVBJLVRva2VuTWFuYWdlciIsImFwcGlkIjoiNzFmYmI4Y2YtYjk3MC00MzhlLTliZGMtYjBmOTRjODhmMTNjIiwiYXBwaWRhY3IiOiIxIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiMmEwOTpiYWM1OjNlMDk6MTZiNDo6MjQzOmFjIiwibmFtZSI6ImNpZHRva2VuIiwib2lkIjoiNDdkMTNkZjYtMWEwYS00Njk2LTgwMDctMDRkMjIzZWJlNGYwIiwicGxhdGYiOiIzIiwicHVpZCI6IjEwMDMyMDA1RTIzNTg2RjIiLCJyaCI6IjEuQVdRQUpJY1FvWmpyN1VXaGF0MHo1aVA1aEFNQUFBQUFBQUFBd0FBQUFBQUFBQUFBQURCa0FBLiIsInNjcCI6IlVzZXIuUmVhZCBwcm9maWxlIG9wZW5pZCBlbWFpbCIsInNpZCI6IjAwNGVlYjNhLWI3NGQtMjExOS0zZGRmLTZlMDU2OTQxNjU2NSIsInNpZ25pbl9zdGF0ZSI6WyJrbXNpIl0sInN1YiI6ImVFd1lwU2MydWxFSE5LaXJPci1Ua0x5TDBvYjJQZ3V2aDZpeU03Zkk1eGMiLCJ0ZW5hbnRfcmVnaW9uX3Njb3BlIjoiQVMiLCJ0aWQiOiJhMTEwODcyNC1lYjk4LTQ1ZWQtYTE2YS1kZDMzZTYyM2Y5ODQiLCJ1bmlxdWVfbmFtZSI6ImNpZHRva2VuQDJnZnJlLm1jc29mdC5vcmciLCJ1cG4iOiJjaWR0b2tlbkAyZ2ZyZS5tY3NvZnQub3JnIiwidXRpIjoiZXpwbkp1b28tRXVQcnI1Z2tfd3hBQSIsInZlciI6IjEuMCIsIndpZHMiOlsiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19hY2QiOjE3NzkwNTgxMjcsInhtc19hY3RfZmN0IjoiOSAzIiwieG1zX2Z0ZCI6InpiLVhHeUV4WUlhX2ctOWFfcGhWaVVoNnYtVkw3RGZFdGk5TUtpbVpUbGdCYTI5eVpXRmpaVzUwY21Gc0xXUnpiWE0iLCJ4bXNfaWRyZWwiOiIxIDI2IiwieG1zX3BmdGV4cCI6MTc4MTQ1MDE4NSwieG1zX3N0Ijp7InN1YiI6IlY3NW9teUZwOXpqenZ2bzFHaGRrdUwtNi16RmVXbXhIV3BFNG8yLUd3WlkifSwieG1zX3N1Yl9mY3QiOiIzIDgiLCJ4bXNfdGNkdCI6MTYxMzY2MTU5OCwieG1zX3RudF9mY3QiOiIzIDYifQ.VMxTXAcfSP62RY7Ql-aIbSH_bU0lWhDrU5BAvh4KcezzLxVqowy-i5oAIeRBInWFX4IIcuOxlNgVZMviuL0eKGRIi-hfulDHk0KUjUvHSuLaUtc1lTmiADXeMudAzleVB6Y1LzOReFbf_gwDD3-rdOGZ9Yb44DGamCW4goBRSwPTRs3iBIv1fcGlax14B0EKzonWwGzndQrh7kCQ_hExXMev0yFsIzWRWL0S8VlVgisWgpvIOqcpFH5AFABUSQ3lWO1lLOTlvlQAiH3DXZ2l5NU9qSWcoeQtgbjA0CdtXyzckDHBtEupXRf0fb4j_FOngRb8bHpMHVF6S2Jsakbx9g
+DPoP: eyJhbGciOiJFUzI1NiIsInR5cCI6ImRwb3Arand0IiwiandrIjp7Imt0eSI6IkVDIiwiY3J2IjoiUC0yNTYiLCJ4IjoiU3ZRNzA3eEJhUXBSXzBYRm1DbUxtSjRsRTRBa2tUdUpOdmxVSDc2dm1yMCIsInkiOiIzT28wZVdHbkdwWVJ4OHBEcmQ3c2k0MmZnMlNqN1pIc09EMElHSXNwb21ZIn19.eyJodHUiOiIvYXBpL3Byb2R1Y3RBY3RpdmF0aW9uL3ZhbGlkYXRlSUlEIiwiaHRtIjoiUE9TVCIsImp0aSI6IjRiOTMwNmViLTZmMjYtNDAzZi1iNzliLWQ5MWU2YWRjMzdmYyIsImlhdCI6MTc4MTM2MTEwNn0.ZUAMXuqkZ3xPKKqF21aAAodEhEKBmAJuY0YhyKuGKWTlOff3J11SQr7P0MdLit2X4rTSUDlcZdXG2I0pH-F3vw
+x-session-id: app_2a6b0fb4f4614c5c9d0720fa67d493bc
+Content-Length: 267
+
+Body:
+{"IID":"051923872671115344086001594721430521885136096510351941","ProductType":"windows","productGroup":"Windows","productName":"Windows 11","numberOfDigits":6,"Country":"USA","Region":"NOAM","InstalledDevices":1,"OverrideStatusCode":"MUL","InitialReasonCode":"45164"}
+```
+
+### Sample of a successful response
+
+```json
+{
+  "message": "Clearinghouse Supplied Confirmation ID",
+  "activationSuccessful": true,
+  "validChecksum": true,
+  "iid": "051923872671115344086001594721430521885136096510351941",
+  "cid": "050036410386313344422853551505822113036833",
+  "pid": "76487-755-7274096-22766",
+  "reasonCode": null,
+  "overrideStatusCode": null,
+  "initialReasonCode": "45164",
+  "maxInstallCount": 1,
+  "isEligibleForManualOverride": false,
+  "isReasonCodeTransferEnabled": null,
+  "endOfSupportEnabled": true,
+  "isDifferentiateEmbedEnabled": true,
+  "productName": "Windows XP",
+  "conversationId": "fHd5P5V"
+}
+```
+
+### Sample of a response with error
+
+```json
+{
+  "message": "Default Key was provided during installation. Please provide original Product Key.",
+  "activationSuccessful": false,
+  "validChecksum": true,
+  "iid": "075441511077031056442225260000529916918562807462593065044116241",
+  "cid": null,
+  "pid": "00436-20000-00000-AAOEM",
+  "reasonCode": "45167",
+  "overrideStatusCode": null,
+  "initialReasonCode": "45164",
+  "maxInstallCount": 1,
+  "isEligibleForManualOverride": false,
+  "isReasonCodeTransferEnabled": false,
+  "endOfSupportEnabled": false,
+  "isDifferentiateEmbedEnabled": false,
+  "productName": "Windows 11",
+  "conversationId": "53eZPFo"
+}
+```
+
+---
+
+## Bearer token
+
+As described in the [How does it work?](#how-does-it-work) section, the request uses a Bearer token from a local `BIN\CidToken.txt` file if present, otherwise it is fetched from the shared token server at `https://cidtoken.ntriver.org/token.json`.
+
+### How to get a Bearer token
+
+- Open https://visualsupport.microsoft.com/ and sign in to your Microsoft account.
+- Once signed in, open the browser developer tools with `Ctrl + Shift + I`.
+- Go to the Network tab, refresh the page, and type `bearer` in the filter/search bar.
+- In the `Authorization` request header of one of the requests, you will find the Bearer token.
+
+Copy the token value and paste it into `BIN\CidToken.txt` (create this file in BIN folder) in your PKeyMaster folder. When this file is present, the script will not attempt to fetch a token from the shared token server.
+
+#### The script is connecting to `https://cidtoken.ntriver.org/token.json` to get a shared token. Is it safe?
+
+Yes.
+
+- The script does not execute the token on your system, it only sends it as a header value to Microsoft's server to get the CID.
+- The response is parsed as JSON only, and the token format is validated against the expected JWT character set and structure, so it cannot alter HTTP header syntax or inject additional headers.
+- Microsoft does not link the IID or the retrieved CID to the token's account, so a shared token works fine.
+
+---
+
+## Supported products
+
+- Windows XP and later versions
+- Office XP and later versions
+
+**Note**:
+
+- Only Windows / Office product keys that have a phone license are supported.
+- Key types such as `PGS:TB`, `Retail:TB:Eval`, `Retail:TB:Sub`, `ltPIN EULA`, etc. are not supported.
+- IID lengths of 50, 54, and 63 digits are supported. Some products use a 59-digit IID; while the script accepts it, it is currently not supported by the VisualSupport API.
+
+---
+
+## CID Visual API results
+
+| Result  | Reason Code | Error Message                                                                                         |
+| ------- | ----------- | ----------------------------------------------------------------------------------------------------- |
+| Success |             | The Confirmation ID was retrieved successfully.                                                       |
+| Failed  | 45270       | DMAK activation override limit reached                                                                |
+| Failed  | 45090       | The product key is blocked either through PK Config file or through other mechanism                   |
+| Failed  | 45112       | Invaild IID                                                                                           |
+| Failed  | 45057       | Unknown SLS status = 200 No business rules available to evaluate activation for specified product key |
+| Failed  | 45269       | ROT activation override limit reached                                                                 |
+| Failed  | 45167       | Default Key was provided during installation. Please provide original Product Key.                    |
+| Failed  | 45090       | This pid is blocked                                                                                   |
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

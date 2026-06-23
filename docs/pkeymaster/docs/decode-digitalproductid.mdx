@@ -1,0 +1,382 @@
+---
+sidebar_position: 12
+slug: /pkeymaster/decode-digitalproductid
+---
+
+# Decode DigitalProductId
+
+## Overview
+
+- **How to use it?** Instructions can be found [here](/pkeymaster).
+- The DigitalProductId (DPID) is a binary blob stored in the Windows Registry that contains licensing information for an installed product, including the encoded product key, product ID, edition, and hardware binding data.
+- It is typically found under `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion` (and similar registry paths for Office).
+- Parsing the DPID lets you recover the installed product key and inspect other activation-related fields.
+- When validating a key with `PidGenX.dll`, it produces DigitalProductId blobs which can be parsed to view key details.
+
+---
+
+## DigitalProductId versions
+
+The DigitalProductId comes in three different versions.
+
+- DigitalProductId Version 2 (50 bytes)
+- DigitalProductId Version 3 (164 bytes)
+- DigitalProductId Version 4 (1272 bytes)
+
+---
+
+## DigitalProductId structure
+
+### DigitalProductId version 2 (50 bytes)
+
+| Field       | Offset | Size     | Data Type          | Description                        |
+| ----------- | ------ | -------- | ------------------ | ---------------------------------- |
+| `ProductId` | 0      | 50 bytes | `String (Unicode)` | Null-terminated Product ID string. |
+
+### DigitalProductId version 3 (164 bytes)
+
+| Field                      | Offset | Size     | Data Type        | Description                                                                                                                                                                  |
+| -------------------------- | ------ | -------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `uiSize`                   | 0      | 4 bytes  | `UInt32`         | Total blob size. Always `164`.                                                                                                                                               |
+| `MajorVersion`             | 4      | 2 bytes  | `UInt16`         | DPID major version.                                                                                                                                                          |
+| `MinorVersion`             | 6      | 2 bytes  | `UInt16`         | DPID minor version.                                                                                                                                                          |
+| `ProductId`                | 8      | 24 bytes | `String (ASCII)` | Null-terminated Product ID string.                                                                                                                                           |
+| `KeyIndex`                 | 32     | 4 bytes  | `UInt32`         | Key index value.                                                                                                                                                             |
+| `EditionId`                | 36     | 16 bytes | `String (ASCII)` | Null-terminated edition string (e.g. `Professional`).                                                                                                                        |
+| `CDKeyBytes`               | 52     | 16 bytes | `Byte[]`         | 15 bytes of encoded key data (byte 15 is always zero).                                                                                                                       |
+| `CloneStatus`              | 68     | 4 bytes  | `UInt32`         | Clone status flag.                                                                                                                                                           |
+| `Time`                     | 72     | 4 bytes  | `UInt32`         | Timestamp of key installation.                                                                                                                                               |
+| `Random`                   | 76     | 4 bytes  | `UInt32`         | Random value.                                                                                                                                                                |
+| `Lt`                       | 80     | 4 bytes  | `UInt32`         | License type. <br /> In modern PidGenX.dll, it has the following meanings: <br /> `0` = Retail <br /> `1` = Upgrade <br /> `2` = OEM <br /> `3` = Volume <br /> `4` = PGS:TB |
+| `LicenseData[0]`           | 84     | 4 bytes  | `UInt32`         | License data field 0.                                                                                                                                                        |
+| `LicenseData[1]`           | 88     | 4 bytes  | `UInt32`         | License data field 1.                                                                                                                                                        |
+| `OemId`                    | 92     | 8 bytes  | `String (ASCII)` | OEM identifier string. <br /> OEMs can use this field to set a custom string.                                                                                                |
+| `BundleId`                 | 100    | 4 bytes  | `UInt32`         | Bundle identifier.                                                                                                                                                           |
+| `HardwareIdStatic`         | 104    | 8 bytes  | `String (ASCII)` | Used with legacy Pidgen.dll. Modern versions do not use it.                                                                                                                  |
+| `HardwareIdTypeStatic`     | 112    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `BiosChecksumStatic`       | 116    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `VolumeSerialStatic`       | 120    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `TotalRamStatic`           | 124    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `VideoBiosChecksumStatic`  | 128    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `HardwareIdDynamic`        | 132    | 8 bytes  | `String (ASCII)` | ^                                                                                                                                                                            |
+| `HardwareIdTypeDynamic`    | 140    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `BiosChecksumDynamic`      | 144    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `VolumeSerialDynamic`      | 148    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `TotalRamDynamic`          | 152    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `VideoBiosChecksumDynamic` | 156    | 4 bytes  | `UInt32`         | ^                                                                                                                                                                            |
+| `CRC32`                    | 160    | 4 bytes  | `UInt32`         | CRC32 checksum over bytes 0-159.                                                                                                                                             |
+
+### DigitalProductId version 4 (1272 bytes)
+
+| Field           | Offset | Size      | Data Type          | Description                                                                   |
+| --------------- | ------ | --------- | ------------------ | ----------------------------------------------------------------------------- |
+| `uiSize`        | 0      | 4 bytes   | `UInt32`           | Total blob size. Always `1272`.                                               |
+| `MajorVersion`  | 4      | 2 bytes   | `UInt16`           | DPID major version.                                                           |
+| `MinorVersion`  | 6      | 2 bytes   | `UInt16`           | DPID minor version.                                                           |
+| `AdvancedPid`   | 8      | 128 bytes | `String (Unicode)` | Null-terminated AdvancedPid string.                                           |
+| `ActivationId`  | 136    | 128 bytes | `String (Unicode)` | Null-terminated Activation ID (GUID).                                         |
+| `OemId`         | 264    | 16 bytes  | `String (Unicode)` | OEM identifier string. <br /> OEMs can use this field to set a custom string. |
+| `EditionType`   | 280    | 520 bytes | `String (Unicode)` | Edition type string.                                                          |
+| `IsUpgrade`     | 800    | 1 byte    | `Byte`             | `1` if this is an upgrade key, `0` otherwise.                                 |
+| `ReservedBytes` | 801    | 7 bytes   | `Byte[]`           | Reserved, always zero.                                                        |
+| `CDKeyBytes`    | 808    | 16 bytes  | `Byte[]`           | 15 bytes of encoded key data (byte 15 is always zero).                        |
+| `CDKey256Hash`  | 824    | 32 bytes  | `Byte[]`           | SHA256 hash of the 16 `CDKeyBytes`.                                           |
+| `Hash256`       | 856    | 32 bytes  | `Byte[]`           | SHA256 hash of the entire blob (with this field zeroed out).                  |
+| `EditionId`     | 888    | 128 bytes | `String (Unicode)` | Edition ID string.                                                            |
+| `KeyType`       | 1016   | 128 bytes | `String (Unicode)` | Key type string (e.g. `Retail`, `Volume:MAK`).                                |
+| `EULA`          | 1144   | 128 bytes | `String (Unicode)` | EULA string.                                                                  |
+
+---
+
+## How to decode DigitalProductId?
+
+Decoding the DigitalProductId means reading the raw binary blob from the Windows Registry and converting the byte arrays back into readable numbers and strings using their fixed offsets. The steps below walk through how this is done.
+
+### Step 1: Read the registry blob
+
+The DigitalProductId is typically stored under `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion`. Depending on your Windows version, there might be a `DigitalProductId` and a `DigitalProductId4`. You can retrieve them natively as byte arrays using PowerShell:
+
+```powershell
+$path  = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
+$props = Get-ItemProperty -Path $path
+$blob3 = $props.DigitalProductId
+$blob4 = $props.DigitalProductId4
+```
+
+### Step 2: Determine the version
+
+The total size of the blob tells you which version of the structure you are dealing with:
+
+- **50 bytes:** Version 2
+- **164 bytes:** Version 3
+- **1272 bytes:** Version 4
+
+```powershell
+$size3 = $blob3.Length
+$size4 = $blob4.Length
+Write-Host "Blob3 size: $size3 bytes"
+Write-Host "Blob4 size: $size4 bytes"
+```
+
+For versions 3 and 4, you can also verify this by reading the first 4 bytes (the `uiSize` field) using `[BitConverter]`:
+
+```powershell
+$uiSize3 = [BitConverter]::ToUInt32($blob3, 0)
+$uiSize4 = [BitConverter]::ToUInt32($blob4, 0)
+```
+
+:::note
+
+In some Windows versions, the registry may add padding, which increases the total blob size. You can read the `uiSize` field to accurately determine the expected size.
+
+:::
+
+### Step 3: Extract fields by offset
+
+Once you know the version, you can pull any piece of information out by reading bytes at the specified offset.
+
+**Extracting Integers (`UInt16` / `UInt32`)**
+
+To read a number, such as the `KeyIndex` in a **v3** blob (offset 32, 4 bytes), pass the byte array and the offset directly to `[BitConverter]`:
+
+```powershell
+$keyIndex = [BitConverter]::ToUInt32($blob3, 32)
+```
+
+**Extracting ASCII strings**
+
+Let's read the `ProductId` from a **v3** blob (offset 8, 24 bytes). Strings in the DPID are null-terminated, meaning they end with a zero byte (`0x00`). We decode the bytes into ASCII, then split by the null character to discard the empty padding:
+
+```powershell
+$rawAscii = [System.Text.Encoding]::ASCII.GetString($blob3, 8, 24)
+$productId = $rawAscii.Split([char]0)[0].Trim()
+```
+
+**Extracting Unicode strings**
+
+In **v4** blobs, strings are stored as Unicode (UTF-16LE). To read the `EditionType` (offset 280, 520 bytes), the logic is identical to ASCII, but we use the `Unicode` encoding class:
+
+```powershell
+$rawUnicode = [System.Text.Encoding]::Unicode.GetString($blob4, 280, 520)
+$editionType = $rawUnicode.Split([char]0)[0].Trim()
+```
+
+**Extracting Byte arrays**
+
+If you just need a subset of bytes, like the 16 `CDKeyBytes` (offset 808 in a **v4** blob), you can slice the array or copy it. This specific field contains the encoded product key, which is handled differently.
+
+```powershell
+$cdKeyBytes = New-Object byte[] 16
+[Array]::Copy($blob4, 808, $cdKeyBytes, 0, 16)
+```
+
+By combining these methods, you can parse the entire blob manually.
+
+---
+
+## How to decode Product Key from DigitalProductId?
+
+The product key is not stored as plain text anywhere in the registry. Instead, it is packed into exactly 15 bytes called `CDKeyBytes` using a Base24 encoding algorithm. Decoding it means reversing that algorithm to get the familiar `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX` key back.
+
+The steps below walk through this using the all-zero byte pattern as a simple example so the math is easy to follow.
+
+### Step 1: Extract CDKeyBytes
+
+The 15 key bytes live at a different offset depending on the DPID version:
+
+- **v3 blob:** offset `52`, length `16`
+- **v4 blob:** offset `808`, length `16`
+
+Only the first 15 bytes (index 0-14) carry key data. The 16th byte is always zero. We extract all 16 bytes because later we will convert this array into a large positive integer, and `.NET` requires a trailing zero byte to ensure the number isn't treated as negative.
+
+```powershell
+$bytes = New-Object byte[] 16
+[Array]::Copy($blob3, 52, $bytes, 0, 16)
+```
+
+### Step 2: Check the N-injection flag
+
+Some product keys contain the letter `N` (e.g. `98NKM-KC6J9-2QGVJ-GMQJT-MPV6T`). These are called **PKey2009** keys and were introduced in Windows 8. The `N` is not part of the Base24 alphabet. It is a special marker injected during decoding. For a deeper look at how PKey2009 keys work, see the [Decode PKey2009 Keys](/pkeymaster/decode-pkey2009-keys) guide.
+
+To indicate that an `N` must be injected, Microsoft sets a single bit inside the raw `CDKeyBytes` data: **bit 3 of byte 14** (the last usable byte). Think of it as a tiny on/off switch hidden inside the key bytes:
+
+- Switch **ON** (`1`): inject an `N` into the decoded key.
+- Switch **OFF** (`0`): no `N`, decode normally.
+
+You read the switch, then turn it off (clear the bit) before decoding, so it doesn't interfere with the Base24 math:
+
+```powershell
+$byte14     = $bytes[14]
+$injectN    = ($byte14 -shr 3) -band 1   # shift right 3 bits, then check lowest bit
+$bytes[14]  = $byte14 -band 0xF7         # turn off bit 3
+```
+
+**Example from live registry:** Byte 14 = `0x09` which is binary `0000 1001`. Bit 3 is ON, so `$injectN = 1`. After clearing, `0x09 AND 0xF7 = 0x01` and byte 14 is now clean for decoding.
+
+### Step 3: Base24 decode
+
+The Base24 alphabet has 24 characters (`BCDFGHJKMPQRTVWXY2346789`), each corresponding to a remainder value from 0 to 23:
+
+```text
+ 0  1  2  3  4  5  6  7  8  9 10 11
+ B  C  D  F  G  H  J  K  M  P  Q  R
+
+12 13 14 15 16 17 18 19 20 21 22 23
+ T  V  W  X  Y  2  3  4  6  7  8  9
+```
+
+Characters like `A`, `E`, `I`, `O`, `U`, `0`, `1`, `5` are intentionally excluded to avoid visual confusion.
+
+How do we get the starting number? The 16 extracted bytes are read as a single little-endian integer. By passing the byte array (after clearing bit 3 in Step 2) into `[System.Numerics.BigInteger]::new($bytes)`, it automatically evaluates the array as the massive decimal value `7409378619882335270147970423590124`.
+
+This number essentially represents a 128-bit integer. The algorithm repeatedly divides that number by 24, and each division produces one character of the key (the remainder is an index into the 24-character alphabet). This runs 25 times, building the key one character at a time from **right to left**.
+
+The first few manual steps of dividing our example key look like this:
+
+```text
+start:           7409378619882335270147970423590124
+iteration 1:     7409378619882335270147970423590124 ÷ 24 = 308724109161763969589498767649588 (remainder 12) -> T
+iteration 2:      308724109161763969589498767649588 ÷ 24 =  12863504548406832066229115318732 (remainder 20) -> 6
+iteration 3:       12863504548406832066229115318732 ÷ 24 =    535979356183618002759546471613 (remainder 20) -> 6
+iteration 4:         535979356183618002759546471613 ÷ 24 =     22332473174317416781647769650 (remainder 13) -> V
+iteration 5:          22332473174317416781647769650 ÷ 24 =       930519715596559032568657068 (remainder 18) -> 3
+... and so on for all 25 iterations.
+```
+
+In PowerShell, we implement this as a simple loop:
+
+```powershell
+$alphabet = 'BCDFGHJKMPQRTVWXY2346789'
+$key = ''
+$lastRemainder = 0
+
+# Convert the 16 bytes into a large integer
+$bigInt = [System.Numerics.BigInteger]::new($bytes)
+
+for ($i = 0; $i -lt 25; $i++) {
+    $remainder = [int]($bigInt % 24)
+    $key = $alphabet[$remainder] + $key
+    $bigInt = [System.Numerics.BigInteger]::Divide($bigInt, 24)
+
+    if ($i -eq 24) { $lastRemainder = $remainder }
+}
+```
+
+After 25 iterations you have a 25-character raw string. `$lastRemainder` holds the final remainder generated, which is also the position at which the `N` will be inserted (if needed).
+
+**Example from live registry:** Running our massive decimal value through the loop produces:
+
+```text
+lastRemainder : 5
+Raw string    : HVK7JGPHTMC97JM9MPGT3V66T
+```
+
+### Step 4: Insert N (if needed)
+
+If `$injectN` is `1`, drop the first character of the raw string and insert `N` at the position stored in `$lastRemainder`:
+
+```powershell
+if ($injectN -eq 1) {
+    $key = $key.Substring(1).Insert($lastRemainder, 'N')
+}
+```
+
+**Why drop the first character?** The N-injection flag was hidden inside byte 14, which skewed the Base24 result. Removing the leading character corrects for that, and the `N` takes the slot that was freed. The position encoded in `$lastRemainder` ensures the `N` lands in the right spot when the key is read back.
+
+**Example from live registry:** `$injectN = 1` and `$lastRemainder = 5`, so `N` is inserted at position 5:
+
+```text
+HVK7JGPHTMC97JM9MPGT3V66T -> drop first H -> VK7JGPHTMC97JM9MPGT3V66T -> insert N at [5] -> VK7JGNPHTMC97JM9MPGT3V66T
+```
+
+### Step 5: Format into groups
+
+Finally, split the 25-character string into five groups of 5 and join them with dashes to get the familiar product key format.
+
+**Live result from registry:**
+
+```text
+VK7JGNPHTMC97JM9MPGT3V66T -> VK7JG-NPHTM-C97JM-9MPGT-3V66T
+```
+
+:::info
+
+- If the product key is cleared using the `slmgr /cpky` command, or if a MAK (Multiple Activation Key) is installed, the `CDKeyBytes` array will be zeroed out. This results in the placeholder key: `BBBBB-BBBBB-BBBBB-BBBBB-BBBBB`.
+- When a MAK key is installed for an MSI-based Office version, Office does not update the DPID in the registry and will continue showing the previous key's details.
+
+:::
+
+---
+
+## How to verify integrity?
+
+### DigitalProductId version 3: CRC32
+
+A standard CRC32 is computed over the first 160 bytes (offsets 0-159). The result must match the 4-byte value stored at offset 160.
+
+```powershell
+# Extract the first 160 bytes
+$data = New-Object byte[] 160
+[Array]::Copy($blob3, 0, $data, 0, 160)
+
+# Compute CRC32 (Requires a custom implementation, check BIN\Scripts\Libs\DigitalProductId.ps1 for Get-CustomCRC32)
+$computed = Get-CustomCRC32 -Bytes $data
+
+# Read the stored 4-byte CRC32 at offset 160
+$stored = [BitConverter]::ToUInt32($blob3, 160)
+
+$computed -eq $stored
+```
+
+### DigitalProductId version 4: SHA256
+
+Two SHA256 checks are done:
+
+1. **CDKey256Hash (offset 824):** SHA256 of the 16 `CDKeyBytes` (offset 808-823). Must match the 32 bytes at offset 824.
+2. **Hash256 (offset 856):** SHA256 of the entire 1272-byte blob with bytes 856-887 zeroed out first. Must match the 32 bytes at offset 856.
+
+```powershell
+$sha256 = [System.Security.Cryptography.SHA256]::Create()
+
+# Check 1: Hash of the 16 CDKeyBytes
+$cdKeyBytes = New-Object byte[] 16
+[Array]::Copy($blob4, 808, $cdKeyBytes, 0, 16)
+$computed1 = $sha256.ComputeHash($cdKeyBytes)
+
+$stored1 = New-Object byte[] 32
+[Array]::Copy($blob4, 824, $stored1, 0, 32)
+
+# Verify
+[BitConverter]::ToString($computed1) -eq [BitConverter]::ToString($stored1)
+
+# Check 2: Hash of the entire blob
+$copy = $blob4.Clone()
+for ($i = 856; $i -le 887; $i++) { $copy[$i] = 0 } # Zero out the hash field itself
+$computed2 = $sha256.ComputeHash($copy)
+
+$stored2 = New-Object byte[] 32
+[Array]::Copy($blob4, 856, $stored2, 0, 32)
+
+# Verify
+[BitConverter]::ToString($computed2) -eq [BitConverter]::ToString($stored2)
+```
+
+:::info
+
+Running `slmgr /cpky` to clear the product key from the registry zeroes out the `CDKeyBytes` array. While Windows updates the `CRC32` in version 3 and the `Hash256` in version 4 to reflect these zeroes, it doesn't update the inner `CDKey256Hash`. As a result, the `CDKey256Hash` integrity check will fail on systems where the key has been manually cleared.
+
+:::
+
+---
+
+:::tip
+
+To view all fields of a `DigitalProductId` from the registry or `PidGenX.dll` export files, see the [Scan DPID in Files](scan-keys#scan-dpid-in-files) option.
+
+:::
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

@@ -1,0 +1,177 @@
+---
+sidebar_position: 3
+slug: /pkeymaster/key-certification
+---
+
+# Key Certification
+
+## Overview
+
+- **How to use it?** Instructions can be found [here](/pkeymaster).
+- The key certification option is useful for a basic key validity check and to verify whether a PKey2009 key has been generated. Note that a valid certification does not guarantee the key can be activated.
+- This option works for Windows Vista / Office 2010 and later versions.
+- In short, **if certification shows failed**, it means the key cannot be activated by any means (although there are some rare exceptions).
+  **If certification shows valid**, it means the key is valid and not blocked (this does not necessarily mean the key can be activated).
+- This option does not consume an activation slot to check.
+
+---
+
+## How does it work?
+
+A SOAP request is sent to Microsoft's `SLCertifyProduct` endpoint at:
+
+```
+https://activation.sls.microsoft.com/slpkc/SLCertifyProduct.asmx
+```
+
+The request includes three pieces of information:
+
+- The product key
+- The algorithm type (`msft:rm/algorithm/pkey/2005` or `msft:rm/algorithm/pkey/2009`)
+- The ActConfigId (obtained from PidGenX during key checking)
+
+Microsoft's server responds with either:
+
+- A valid PKC (Product Key Certificate) token, meaning the key is certified and not blocked.
+- A SOAP fault containing an HRESULT error code and a message, meaning the key failed certification.
+
+Since this is purely a certification check and not an activation attempt, no activation slot is consumed.
+
+### Sample request
+
+```xml
+POST https://activation.sls.microsoft.com/slpkc/SLCertifyProduct.asmx HTTP/1.1
+Host: activation.sls.microsoft.com
+Connection: close
+Content-Type: text/xml; charset=utf-8
+User-Agent: SLSSoapClient
+SOAPAction: http://microsoft.com/SL/ProductCertificationService/IssueToken
+Content-Length: 1147
+
+Body:
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+  <soap:Body>
+    <RequestSecurityToken xmlns="http://schemas.xmlsoap.org/ws/2004/04/security/trust">
+      <TokenType>PKC</TokenType>
+      <RequestType>http://schemas.xmlsoap.org/ws/2004/04/security/trust/Issue</RequestType>
+      <UseKey><Values xsi:nil="true"/></UseKey>
+      <Claims>
+        <Values xmlns:q1="http://schemas.xmlsoap.org/ws/2004/04/security/trust" soapenc:arrayType="q1:TokenEntry[3]">
+          <TokenEntry><Name>ProductKey</Name><Value>NJCF7-PW8QT-3324D-688JX-2YV66</Value></TokenEntry>
+          <TokenEntry><Name>ProductKeyType</Name><Value>msft:rm/algorithm/pkey/2009</Value></TokenEntry>
+          <TokenEntry><Name>ProductKeyActConfigId</Name><Value>msft2009:df96023b-dcd9-4be2-afa0-c6c871159ebe&amp;AgAAAJoH2NSFU3D8JA==</Value></TokenEntry>
+        </Values>
+      </Claims>
+    </RequestSecurityToken>
+  </soap:Body>
+</soap:Envelope>
+```
+
+### Sample of a valid PKC (Product Key Certificate)
+
+```xml
+<r:license licenseId="{cf0c64fd-b698-45f5-b90a-0f157bd4d739}" xmlns:r="urn:mpeg:mpeg21:2003:01-REL-R-NS">
+	<r:title>XrML 2.1 License - {msft:sl/PKC}</r:title>
+	<r:grant>
+		<productId licensePartId="productId" xmlns="http://www.microsoft.com/DRM/XrML2/SL/v2">
+			<sl:pid Algorithm="msft:rm/algorithm/pkey/2009" xmlns:sl="http://www.microsoft.com/DRM/XrML2/SL/v2">00389-20000-00001-AA983</sl:pid>
+			<sl:pkeyHash Algorithm="msft:rm/algorithm/pkey/hash/1.0" xmlns:sl="http://www.microsoft.com/DRM/XrML2/SL/v2">roBrWJ4i7vD7rCIP3OtNb1pQ34kWTrSgH67sa5fWJcA=</sl:pkeyHash>
+		</productId>
+		<r:possessProperty/>
+		<productData licensePartId="productData" xmlns="http://www.microsoft.com/DRM/XrML2/SL/v2">
+			<ProductDataNode xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.microsoft.com/DRM/XrML2/SL/v2">
+				<ProductKeyActivationId>481107918</ProductKeyActivationId>
+				<ProductKeyId>3892000000001</ProductKeyId>
+				<ProductKeyType>Retail</ProductKeyType>
+				<ActConfigId>{df96023b-dcd9-4be2-afa0-c6c871159ebe}</ActConfigId>
+			</ProductDataNode>
+		</productData>
+	</r:grant>
+	<r:issuer>
+		<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+			<SignedInfo>
+				<CanonicalizationMethod Algorithm="http://www.microsoft.com/xrml/lwc14n"/>
+				<SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+				<Reference>
+					<Transforms>
+						<Transform Algorithm="urn:mpeg:mpeg21:2003:01-REL-R-NS:licenseTransform"/>
+						<Transform Algorithm="http://www.microsoft.com/xrml/lwc14n"/>
+					</Transforms>
+					<DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+					<DigestValue>TqKzXJFSDUR9IHrzfKP864W71oY=</DigestValue>
+				</Reference>
+			</SignedInfo>
+			<SignatureValue>JoB0Uyo0lg6xyU4PZqIOoCnQAjgqIyeeijqgweG1VMTYrQYNnWhN8lV4kQgcqXDOMQdcd4KyYGMB12vBVf7CxvnI91ySMeQCbCPN5AnY0RH0Vqj8jgU5A/uV52bRAi955kbszuAwrS33IXKV8pFTrHB3j4seUm7KwonRycUmX3GiOtAsM3Yrhb4Dkk8zWEmWde28zy0rGGh8WsU8XuKymUsha0Sgz6qQjnVAPk48eqjPGfHEA/sXeeirupd6U8Wst9eM4QXJZ1TkBvh5iXpgD7xnWKQTSWWhoTk4E0vwiPj1Y6BrKNCJOiUZVYgijAIaTIkSjmGhAxSJ1RNBdXYLYg==</SignatureValue>
+			<KeyInfo>
+				<KeyValue>
+					<RSAKeyValue>
+						<Modulus>5LkuKrdkDU70/uHCbMdGM+iuHoieDBdqMkvdSjr/t12g+gF1W/wDw3jJ4wRKBgFNYn+DzoiXQygTQOrGdKquK1MBeLxyw/HK8CYR2LKhkkXMyzbW6hqAGaOtdw8Cs4VOcEUlg+qnFyRakAzcM8GjCVQLFsYxdhnewN4NnprE1zMGmgWpoDw+uFjf8BkWKic9zl8CEn9O655iWK2hbX8w9yh6+8UPpBCmNgcVTGFHpoFiydMhfUQ7d9udp8FIhKunaC7ZdGFnv/500A63UwTwA8HrTTd93BxQmc3hMshhtmLUReGtxF2OKtd+7rPixZ+tZuTemy0j6/JZPwNRJVo3zQ==</Modulus>
+						<Exponent>AQAB</Exponent>
+					</RSAKeyValue>
+				</KeyValue>
+			</KeyInfo>
+		</Signature>
+		<r:details>
+			<r:timeOfIssue>2026-06-12T08:58:14Z</r:timeOfIssue>
+		</r:details>
+	</r:issuer>
+	<r:otherInfo>
+		<tm:infoTables xmlns:tm="http://www.microsoft.com/DRM/XrML2/TM/v2">
+			<tm:infoList tag="#global">
+				<tm:infoStr name="licenseType">msft:sl/PKC</tm:infoStr>
+				<tm:infoStr name="licenseVersion">2.0</tm:infoStr>
+				<tm:infoStr name="licensorUrl">http://licensing.microsoft.com</tm:infoStr>
+				<tm:infoStr name="licenseCategory">msft:sl/ISSUANCE</tm:infoStr>
+				<tm:infoStr name="issuanceCertificateId">{9e54f6ea-be00-4909-84d0-3cbce8e57e5d}</tm:infoStr>
+			</tm:infoList>
+		</tm:infoTables>
+	</r:otherInfo>
+</r:license>
+```
+
+### Sample error response
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<soap:Body>
+		<soap:Fault>
+			<faultcode>soap:Server</faultcode>
+			<faultstring>SoapException</faultstring>
+			<detail>
+				<HRESULT>0xC004C00D</HRESULT>
+				<Messages>
+					<Message>118 (Activation) - [PA Invalid ActConfigId.  ---&gt; Invalid product key unique Id]</Message>
+				</Messages>
+			</detail>
+		</soap:Fault>
+	</soap:Body>
+</soap:Envelope>
+```
+
+---
+
+## Supported products
+
+- Windows Vista / Server 2008 and later versions
+- Office 2010 and later versions
+
+**Note**: PGS:TB Key Type / ltPIN EULA product keys are not supported.
+
+---
+
+## Key certification results
+
+| Certification Result | Error Code | Error Message                                                                   | Meaning                                                                                                                                                                                  |
+| -------------------- | ---------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Valid                |            |                                                                                 | A valid PKC (Product Key Certificate) token was received, meaning the key is certified and not blocked (this does not necessarily mean the key can be activated).                        |
+| Failed               | 0xC004C003 | 103 (Activation) - [PA Product key blocked. ---> Product key blocked]           | The key is valid (not generated) but cannot be activated by any means (fully blocked keys, GVLK, etc.).                                                                                  |
+| Failed               | 0xC004C00D | 118 (Activation) - [PA Invalid ActConfigId. ---> Invalid product key unique Id] | The product key type is not supported, for example Visual Studio, PGS:TB keys, Office PIN keys, etc.                                                                                    |
+| Failed               | 0xC004C004 | 104 (Activation) - [PA Invalid product key. ---> Invalid product key]           | The key is either invalid or has been generated. However, in some rare cases this error is incorrectly returned even when a CID can be generated and the supported product can be activated. |
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

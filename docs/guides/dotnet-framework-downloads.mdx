@@ -1,0 +1,182 @@
+---
+sidebar_position: 2
+slug: /dotnet-framework-downloads
+title: .NET Framework Download Links - Complete Guide for Windows & Server Compatibility
+sidebar_label: .NET Framework
+description: Comprehensive guide to download .NET Framework 4.8.1, 4.8, 3.5 SP1, and 2.0 SP2. Find official download links and check .NET Framework version compatibility with all Windows 11, Windows 10, Windows 8, Windows 7, and Windows Server versions. Includes legacy support for Windows XP, Vista, and older systems with platform update requirements.
+keywords:
+  - .NET Framework download
+  - .NET Framework 4.8.1
+  - .NET Framework 4.8
+  - .NET Framework 3.5 SP1
+  - .NET Framework 2.0 SP2
+  - Windows .NET Framework compatibility
+  - Windows Server .NET Framework
+  - .NET Framework offline installer
+  - .NET Framework for Windows 11
+  - .NET Framework for Windows 10
+  - .NET Framework for Windows 7
+  - .NET Framework for Windows XP
+  - .NET Framework version compatibility
+  - .NET Framework system requirements
+  - .NET Framework download links
+  - Microsoft .NET Framework
+---
+
+# .NET Framework
+
+This page lists .NET Framework download links and shows which version ships with each Windows release, along with the newest version you can install manually. Useful for older Windows setups, legacy apps, or version compatibility checks.
+
+---
+
+## Download Links
+
+### .NET Framework 4.x
+
+On the download page, choose the Offline Runtime option.
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://dotnet.microsoft.com/en-us/download/dotnet-framework" target="_blank" rel="noopener noreferrer">.NET Framework 4.x</a>
+</div>
+
+### .NET Framework 3.5 SP1
+
+For Windows Vista, Server 2008, and earlier, and for Windows 11 26H1 and later, use the standalone installer below.
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://download.microsoft.com/download/298af580-974e-4001-a07d-bb200d7c5792/DotNet35Setup.exe" target="_blank" rel="noopener noreferrer">.NET Framework 3.5 SP1 for Windows 11 26H1 and newer versions of Windows and Server</a>
+</div>
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://download.visualstudio.microsoft.com/download/pr/b635098a-2d1d-4142-bef6-d237545123cb/2651b87007440a15209cac29634a4e45/dotnetfx35.exe" target="_blank" rel="noopener noreferrer">.NET Framework 3.5 SP1 for Windows Vista, Server 2008 and other previous versions of Windows</a>
+</div>
+
+For **Windows 8** through **Windows 11 25H2** and **Server 2008 R2** through **Server 2025**, .NET Framework 3.5 must be [**enabled**](https://learn.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows#enable-net-framework-35-on-windows-server) via Windows Features or DISM; no standalone installer is available for those versions.
+
+<details>
+<summary>Commands to enable .NET Framework 3.5</summary>
+
+For **Windows 8** through **Windows 11 25H2** and **Server 2008 R2** through **Server 2025**:  
+Open command prompt as admin and enter:
+
+**Online:**
+
+```
+DISM /Online /Enable-Feature /FeatureName:NetFx3 /All
+```
+
+**Offline:** Mount Windows ISO and run this command, where `D:` is mounted path (change if needed)
+
+```
+DISM /Online /Enable-Feature /FeatureName:NetFx3 /All /Source:D:\sources\sxs /LimitAccess
+```
+
+---
+
+**For Server 2008 R2**, you need to enter:
+
+```
+start /w ocsetup NetFx3
+```
+
+**For Server 2008 R2 Core**, you need to enter:
+
+```
+start /w ocsetup NetFx2-ServerCore
+start /w ocsetup NetFx2-ServerCore-WOW64
+start /w ocsetup NetFx3-ServerCore
+start /w ocsetup NetFx3-ServerCore-WOW64
+```
+
+</details>
+
+### .NET Framework 2.0 SP2
+
+Microsoft no longer provides download links for .NET Framework versions older than 3.5. Internet Archive links are added below for .NET Framework 2.0 SP2. These files are digitally signed, and you can verify this in the Digital Signatures tab in the File Properties.
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://web.archive.org/web/20200801000000id_/download.microsoft.com/download/c/6/e/c6e88215-0178-4c6c-b5f3-158ff77b1f38/NetFx20SP2_x86.exe" target="_blank" rel="noopener noreferrer">.NET Framework 2.0 SP2 x86</a>
+  <a className="download-button" href="https://web.archive.org/web/20200801000000id_/download.microsoft.com/download/c/6/e/c6e88215-0178-4c6c-b5f3-158ff77b1f38/NetFx20SP2_x64.exe" target="_blank" rel="noopener noreferrer">.NET Framework 2.0 SP2 x64</a>
+</div>
+
+### Older version prerequisites
+
+Some older Windows versions need platform updates before .NET Framework installers can run. The compatibility tables below show when each update is required.
+
+{/* prettier-ignore */}
+<div className="download-buttons">
+  <a className="download-button" href="https://www.catalog.update.microsoft.com/Search.aspx?q=KB4474419" target="_blank" rel="noopener noreferrer">KB4474419 SHA-2 Update</a>
+  <a className="download-button" href="https://download.microsoft.com/download/f/f/1/ff178bb1-da91-48ed-89e5-478a99387d4f/wic_x86_enu.exe" target="_blank" rel="noopener noreferrer">WIC x86</a>
+  <a className="download-button" href="https://download.microsoft.com/download/6/4/5/645FED5F-A6E7-44D9-9D10-FE83348796B0/wic_x64_enu.exe" target="_blank" rel="noopener noreferrer">WIC x64</a>
+  <a className="download-button" href="https://catalog.s.download.windowsupdate.com/msdownload/update/v3-19990518/cabpool/windowsinstaller-kb893803-v2-x86_830994754ba721add8a13bd0266d2e092f21cab0.exe" target="_blank" rel="noopener noreferrer">Windows Installer 3.1</a>
+  <a className="download-button" href="https://archive.org/download/windows-installer-3.0/WindowsInstaller-KB884016-v2-x86.exe" target="_blank" rel="noopener noreferrer">Windows Installer 3.0</a>
+</div>
+
+:::tip
+
+Disconnect VPN if archive page is not loading.
+
+:::
+
+---
+
+## Installation Notes
+
+- .NET Framework is Windows-only and is different from modern `.NET` / `.NET Core`.
+- .NET Framework 2.0, 3.0, and 3.5 use the CLR 2.0 family. Installing .NET Framework 3.5 SP1 also provides the 2.0 and 3.0 runtime layers for applications that target them.
+- .NET Framework 4.0, 4.5, 4.6, 4.7, and 4.8 all use the CLR 4.0 family. Each release is a superset of the previous one, so applications targeting any earlier 4.x version will run on a newer 4.x runtime.
+- .NET Framework 4.x releases are in-place updates. Only one 4.x version can be installed at a time.
+- If a newer .NET Framework 4.x version is already installed, older 4.x installers will usually be blocked.
+- .NET Framework 3.5 can be installed side by side with .NET Framework 4.x.
+- Starting with Windows 11 26H1, .NET Framework 3.5 is installed with a standalone installer instead of the old Windows Features component.
+
+---
+
+## Windows Compatibility Table
+
+The table lists the version included with Windows and the newest .NET Framework version that can be installed on that Windows release.
+
+| Windows Version                                   | Preinstalled <br /> .NET 4.x Version <br /> (CLR 4.0) | Latest supported <br /> .NET 4.x Version <br /> (CLR 4.0)                                         | Preinstalled <br /> .NET (3.x, 2.x) Version <br /> (CLR 2.0) | Latest supported <br /> .NET (3.x, 2.x) Version <br /> (CLR 2.0) |
+| ------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Windows 11 26H1 / 25H2 / 24H2 / 23H2 / 22H2       | **4.8.1**                                             | NA                                                                                                | None                                                         | **3.5**                                                          |
+| Windows 11 21H2                                   | **4.8**                                               | **4.8.1**                                                                                         | None                                                         | **3.5**                                                          |
+| Windows 10 22H2 / 21H2 / 21H1 / 20H2              | **4.8**                                               | **4.8.1**                                                                                         | None                                                         | **3.5**                                                          |
+| Windows 10 2004 / 1909 / 1903                     | **4.8**                                               | **4.8**                                                                                           | None                                                         | **3.5**                                                          |
+| Windows 10 1809 / 1803                            | **4.7.2**                                             | **4.8**                                                                                           | None                                                         | **3.5**                                                          |
+| Windows 10 1709                                   | **4.7.1**                                             | **4.8**                                                                                           | None                                                         | **3.5**                                                          |
+| Windows 10 1703                                   | **4.7**                                               | **4.8**                                                                                           | None                                                         | **3.5**                                                          |
+| Windows 10 1607                                   | **4.6.2**                                             | **4.8**                                                                                           | None                                                         | **3.5**                                                          |
+| Windows 10 1511                                   | **4.6.1**                                             | **4.6.2**                                                                                         | None                                                         | **3.5**                                                          |
+| Windows 10 1507                                   | **4.6**                                               | **4.6.2**                                                                                         | None                                                         | **3.5**                                                          |
+| Windows 8.1                                       | **4.5.1**                                             | **4.8**                                                                                           | None                                                         | **3.5**                                                          |
+| Windows 8                                         | **4.5**                                               | **4.6.1**                                                                                         | None                                                         | **3.5**                                                          |
+| Windows 7                                         | None                                                  | **4.5.2** <br /><br /> **4.6.1** (requires SP1) <br /><br /> **4.8** (requires SP1 and KB4474419) | **3.5**                                                      | **3.5**                                                          |
+| Windows Vista                                     | None                                                  | **4.6**                                                                                           | **3.0**                                                      | **3.5**                                                          |
+| Windows XP (NT 5.2 family) <br /> (x64 and IA-64) | None                                                  | **4.0** (requires WIC)                                                                            | None                                                         | **3.5**                                                          |
+| Windows XP (NT 5.1 family) <br /> (x86 and IA-64) | None                                                  | **4.0** (requires SP2 and WIC and Windows Installer 3.1 **OR** SP3)                               | None                                                         | **3.5** (requires SP2 and Windows Installer 3.1 **OR** SP3)      |
+| Windows 2000                                      | None                                                  | None                                                                                              | None                                                         | **2.0** (requires SP4 and Windows Installer 3.0)                 |
+| Windows NT (3.1, 3.5, 3.51, 4.0)                  | None                                                  | None                                                                                              | None                                                         | None                                                             |
+| Windows ME                                        | None                                                  | None                                                                                              | None                                                         | **2.0** (requires Windows Installer 3.0)                         |
+| Windows 98                                        | None                                                  | None                                                                                              | None                                                         | **2.0** (requires Windows Installer 3.0)                         |
+| Windows 95                                        | None                                                  | None                                                                                              | None                                                         | None                                                             |
+
+## Windows Server Compatibility Table
+
+| Windows Server Version <br /> (Non-Core) | Preinstalled <br /> .NET 4.x Version <br /> (CLR 4.0) | Latest supported <br /> .NET 4.x Version <br /> (CLR 4.0)                                         | Preinstalled <br /> .NET (3.x, 2.x) Version <br /> (CLR 2.0) | Latest supported <br /> .NET (3.x, 2.x) Version <br /> (CLR 2.0)             |
+| ---------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Windows Server 2025                      | **4.8.1**                                             | NA                                                                                                | None                                                         | **3.5**                                                                      |
+| Windows Server 2022                      | **4.8**                                               | **4.8.1**                                                                                         | None                                                         | **3.5**                                                                      |
+| Windows Server 2019                      | **4.7.2**                                             | **4.8**                                                                                           | None                                                         | **3.5**                                                                      |
+| Windows Server 2016                      | **4.6.2**                                             | **4.8**                                                                                           | None                                                         | **3.5**                                                                      |
+| Windows Server 2012 R2                   | **4.5.1**                                             | **4.8**                                                                                           | None                                                         | **3.5**                                                                      |
+| Windows Server 2012                      | **4.5**                                               | **4.8**                                                                                           | None                                                         | **3.5**                                                                      |
+| Windows Server 2008 R2                   | None                                                  | **4.5.2** <br /><br /> **4.6.1** (requires SP1) <br /><br /> **4.8** (requires SP1 and KB4474419) | None                                                         | **3.5**                                                                      |
+| Windows Server 2008                      | None                                                  | **4.6**                                                                                           | None                                                         | **3.5**                                                                      |
+| Windows Server 2003 R2                   | None                                                  | **4.0** (requires WIC)                                                                            | None                                                         | **3.5**                                                                      |
+| Windows Server 2003                      | None                                                  | **4.0** (requires SP1 and WIC)                                                                    | None                                                         | **2.0** (requires Windows Installer 3.0) <br /><br /> **3.5** (requires SP1) |
+| Windows 2000                             | None                                                  | None                                                                                              | None                                                         | **2.0** (requires SP4 and Windows Installer 3.0)                             |
+| Windows NT (3.1, 3.5, 3.51, 4.0)         | None                                                  | None                                                                                              | None                                                         | None                                                                         |

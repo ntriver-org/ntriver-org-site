@@ -1,0 +1,62 @@
+---
+sidebar_position: 9
+slug: /pkeymaster/decode-mod7-keys
+---
+
+# Decode Mod7 Keys
+
+## Overview
+
+- **How to use it?** Instructions can be found [here](/pkeymaster).
+- Mod7 algorithm was used for pre-Windows 98 era product keys.
+- The algorithm is very simple and fast to check. It was not intended to be secure, it was intended to make it a bit harder to generate random keys that work.
+- Mod7 algorithm was used for following products:
+  - Windows 95
+  - Windows NT 4.0
+  - Office 95
+  - Office 97
+  - Office 98 Retail (Mac)
+  - Office 2001 Retail (Mac)
+
+---
+
+## How does it work?
+
+Pre-Windows 98 era keys used a very simple Mod7 algorithm for their product keys. Gurney wrote a detailed [article](https://gurney.dev/posts/mod7/) on this.
+I tested the logic for Office 95/97 OEM keys and added them to the script. Office 98/2001 OEM for Mac has not been tested and is not included here.
+
+To easily understand the logic, here is a summary table.
+
+### Summary Table
+
+| Key Type               | Format                    | Common Rules                                                                                                                                      | Product / Edition                                                                      | Specific Rules                                                                                                                                                              |
+| :--------------------- | :------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **10-Digit CD retail** | `XXX-XXXXXXX`             | 2nd segment (`XXXXXXX`): Sum of digits divisible by 7                                                                                             | **- Windows 95 Retail**                                                                | 1st segment: `000` to `998`, excludes blacklisted (`333`, `444`, `555`, `666`, `777`, `888`, `999`), can contain letters                                                    |
+|                        |                           |                                                                                                                                                   | **- Windows NT 4.0 Retail**                                                            | 1st segment: `000` to `998`, numeric, excludes blacklisted (`333`, `444`, `555`, `666`, `777`, `888`, `999`). <br/><br/> 2nd segment: last digit cannot be `0`, `8`, or `9` |
+|                        |                           |                                                                                                                                                   | **- Office 95 Retail <br/> - Office 98 Retail (Mac) <br/> - Office 2001 Retail (Mac)** | 1st segment: `000` to `999`, numeric                                                                                                                                        |
+| **11-Digit CD retail** | `XXXX-XXXXXXX`            | 1st segment (`XXXX`): `0001` to `9991`, 4th digit = (3rd digit + 1 or 2) mod 10. <br/><br/> 2nd segment (`XXXXXXX`): Sum of digits divisible by 7 | **- Office 97 Retail**                                                                 | None                                                                                                                                                                        |
+| **OEM key**            | `XXXXX-OEM-XXXXXXX-XXXXX` | 3rd segment (`XXXXXXX`): Sum of digits divisible by 7. <br/><br/> 4th segment (`XXXXX`): Random numeric digits                                    | **- Windows 95 OEM**                                                                   | 1st segment: Julian day `001`-`366`, year `95`-`02`. <br/><br/> 3rd segment: 1st digit must be `0`, last digit cannot be `0`, `8`, or `9`                                   |
+|                        |                           |                                                                                                                                                   | **- Windows NT 4.0 OEM**                                                               | 1st segment: Julian day `001`-`366`, year `95`-`03`. <br/><br/> 3rd segment: 1st digit must be `0`, last digit cannot be `0`, `8`, or `9`                                   |
+|                        |                           |                                                                                                                                                   | **- Office 95 OEM <br/> - Office 97 OEM**                                              | 1st segment: Random numeric digits                                                                                                                                          |
+
+---
+
+## Sample check in PKeyMaster
+
+```
+Checking Key: 27497-OEM-0025347-80387
+
+Product Key       : 27497-OEM-0025347-80387
+Result            : Valid
+Product Match     : Windows 95 OEM
+Product Match     : Windows NT 4.0 OEM
+Product Match     : Office 95 OEM
+Product Match     : Office 97 OEM
+Query Time        : 0.011 s
+```
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

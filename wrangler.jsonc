@@ -1,6 +1,6 @@
 {
-  "name": "massgrave",
-  "compatibility_date": "2025-09-27",
+  "name": "ntriver-org",
+  "compatibility_date": "2026-06-23",
   "assets": {
     "directory": "./build",
 	"not_found_handling": "404-page"

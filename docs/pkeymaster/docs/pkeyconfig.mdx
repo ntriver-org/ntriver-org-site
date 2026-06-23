@@ -1,0 +1,107 @@
+---
+sidebar_position: 14
+slug: /pkeymaster/pkeyconfig
+---
+
+# PKeyConfig
+
+## Overview
+
+- PKeyConfig files contain product key ranges and other data necessary for product key validation.
+- They are designed to be used alongside the `pidgenx.dll` library.
+- Microsoft introduced this method starting with Windows Vista build 5048 (originally named `pkeyconfig.xml` and later renamed to `pkeyconfig.xrm-ms` in build 5259).
+- Prior to this, key ranges and BINK data were hardcoded into binary files such as `pidgen.dll` and `MSO.DLL`, which made them difficult to maintain and update.
+
+---
+
+## Location
+
+Depending on the Microsoft product, `pkeyconfig.xrm-ms` files can be found in different locations on your system:
+
+- **Windows Vista**:  
+`C:\Windows\System32\licensing\pkeyconfig\pkeyconfig.xrm-ms`
+
+- **Windows 7 and later**:  
+`C:\Windows\System32\spp\tokens\pkeyconfig\pkeyconfig.xrm-ms`
+
+- **Microsoft Office 2013 C2R** (64-bit):  
+`C:\Program Files\Microsoft Office\root\Office15\pkeyconfig-office.xrm-ms`
+
+- **Microsoft Office 2016 and later C2R** (64-bit):  
+`C:\Program Files\Microsoft Office\root\Office16\pkeyconfig-office.xrm-ms`
+
+- **Microsoft Office 2010 MSI** (64-bit):  
+`C:\Program Files\Common Files\microsoft shared\OFFICE14\Office Setup Controller\pkeyconfig-office.xrm-ms`
+
+- **Microsoft Office 2013 MSI** (64-bit):  
+`C:\Program Files\Common Files\microsoft shared\OFFICE15\Office Setup Controller\pkeyconfig-office.xrm-ms`
+
+- **Microsoft Office 2016 MSI** (64-bit):  
+`C:\Program Files\Common Files\microsoft shared\OFFICE16\Office Setup Controller\pkeyconfig-office.xrm-ms`
+
+---
+
+## File Structure
+
+A `pkeyconfig.xrm-ms` file is essentially an XML file that contains a digital signature and encoded configuration data. 
+
+The core data is stored within an `infoBin` XML node named `pkeyConfigData`. The content inside this node is a Base64-encoded string. To read the actual key configuration data, you need to extract this Base64 string and decode it into text.
+
+Once decoded, the resulting string is another valid XML structure containing the following vital nodes:
+- **`Configuration`**: Defines details such as `ActConfigId`, `ProductDescription`, `EditionId`, and `ProductKeyType`.
+- **`PublicKey`**: Contains cryptography details like `GroupId` and `AlgorithmId`.
+- **`KeyRange`**: Outlines the valid key ranges, including `Start` and `End` sequence limits, `PartNumber`, and `EulaType`.
+
+---
+
+## Extract pkeyConfigData
+
+Here is a quick PowerShell code example demonstrating how to read and decode a `pkeyconfig` file:
+
+```powershell
+# Path to your pkeyconfig file
+$filePath = "C:\Windows\System32\spp\tokens\pkeyconfig\pkeyconfig.xrm-ms"
+
+# Read the file as XML
+[xml]$xrm = Get-Content -Path $filePath -Raw
+
+# Locate the node containing the base64 encoded data
+$binNode = $xrm.SelectSingleNode("//*[local-name()='infoBin' and @name='pkeyConfigData']")
+
+# Decode the Base64 string to an XML string
+$bytes = [Convert]::FromBase64String($binNode.InnerText.Trim())
+$xmlStr = [System.Text.Encoding]::UTF8.GetString($bytes)
+
+# Parse the decoded string as an XML object
+[xml]$pkeyConfigXml = $xmlStr
+
+# Now you can explore the configuration data!
+# For example, let's output the first Configuration node:
+$pkeyConfigXml.SelectNodes("//*[local-name()='Configuration']") | Select-Object -First 1
+```
+
+---
+
+## PKeyConfig Reader
+
+To make it easy to read and extract information from these files, PKeyMaster includes a PKeyConfig Reader option.
+
+Using the reader, you can select a single `pkeyconfig` file or an entire folder of them. The tool parses the files and exports all the internal configuration and key-range data into structured CSV files for easy viewing.
+
+The exported CSV files are automatically saved to your desktop under the `Desktop\PKeyMaster-Logs\PKeyConfigs\<timestamp>\` directory.
+
+---
+
+## PKeyConfigs Collection
+
+PKeyMaster also includes a comprehensive collection of `pkeyconfig` files for various Microsoft products (Windows, Office, Visual Studio, SQL Server, etc.). 
+
+- `PKeyMaster\BIN\PKeyConfigs` folder contains pkeyconfig files, and these files are taken from the original installation media of the corresponding Microsoft products.
+- The only exception is the file `Pre-Vista Custom Made\Pre-Vista (Windows 98 to XP - Office 2000 to 2007 - etc)\pkeyconfig-custom-made.xrm-ms`
+which is [custom made](key-checker#3-the-pidgenxdll-method).
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).
