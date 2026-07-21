@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 24" width="140" height="24">
+  <rect width="140" height="24" rx="4" fill="#ffcc00" />
+  
+  <g transform="translate(6, 2) scale(0.2)">
+    <path d="M 50 10 L 90 85 L 10 85 Z" fill="#fff" stroke="#000" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M 50 35 L 50 65" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="50" cy="78" r="6" fill="#000" />
+  </g>
+
+  <text x="32" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#000">Under Construction</text>
+</svg>

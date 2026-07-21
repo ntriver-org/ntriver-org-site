@@ -101,6 +101,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'downloadwindowsofficeSidebar',
+            position: 'left',
+            label: 'Download Windows / Office',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'guidesSidebar',
             position: 'left',
             label: 'Guides',
