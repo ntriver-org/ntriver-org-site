@@ -1,1 +1,2 @@
-/drive/* https://delivery.temp-drive.workers.dev/:splat 302
+/drive/*  /drive?file=:splat  302
+/drive    /download-windows-office  302

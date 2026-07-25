@@ -415,3 +415,28 @@ table tr:nth-child(even) th {
   font-size: 13px;
   opacity: 0.75;
 }
+
+.sidebar-item-hidden {
+  display: none !important;
+}
+
+/* Drive page download button - matches navbar active pill exactly */
+.drive-download-btn {
+  display: inline-block;
+  background-color: var(--custom-pill-active-bg);
+  color: var(--custom-pill-active-color) !important;
+  border: 1px solid var(--custom-pill-active-border);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: var(--ifm-font-size-base);
+  font-weight: 500;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  word-break: break-all;
+}
+
+.drive-download-btn:hover {
+  background-color: var(--custom-sidebar-active-hover-bg);
+  color: var(--custom-pill-active-color) !important;
+}
