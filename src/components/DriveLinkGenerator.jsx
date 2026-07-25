@@ -30,6 +30,11 @@ export default function DriveLinkGenerator() {
     const searchParams = new URLSearchParams(location.search);
     const extractedFilename = searchParams.get('file');
 
+    if (!extractedFilename) {
+      window.location.replace('/download-windows-office');
+      return;
+    }
+
     setFilename(extractedFilename);
 
     const checkAndGenerate = async () => {
