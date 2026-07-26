@@ -8,7 +8,8 @@ const URL_CONFIG = {
     'https://delivery.temp-drive.workers.dev/',
   ],
   normal: [
-    'https://drive.deadtrain.dev/',
+    'https://temp-delivery.ntriver.org/',
+    'https://temp-delivery.deadtrain.dev/'
   ],
 };
 // ─────────────────────────────────────────────────────────────────────────────
