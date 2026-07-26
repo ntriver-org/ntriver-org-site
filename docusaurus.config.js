@@ -41,10 +41,6 @@ const config = {
     locales: ['en'],
   },
 
-  clientModules: [
-    './src/clientModules/driveRewrite.js',
-  ],
-
   presets: [
     [
       'classic',
