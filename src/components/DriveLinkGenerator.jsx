@@ -13,6 +13,9 @@ const URL_CONFIG = {
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Fixed canary to test if the workers.dev domain is reachable.
+const WORKERS_CANARY = 'https://workers.dev/';
+
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
@@ -43,8 +46,8 @@ export default function DriveLinkGenerator() {
       const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5s timeout
 
       try {
-        // Ping the first workers URL to check if the domain is accessible
-        await fetch(URL_CONFIG.workers[0], {
+        // Ping the workers URL to check if the domain is accessible
+        await fetch(WORKERS_CANARY, {
           method: 'HEAD',
           mode: 'no-cors',
           signal: controller.signal
