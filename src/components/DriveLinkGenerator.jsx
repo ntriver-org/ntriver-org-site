@@ -41,6 +41,9 @@ export default function DriveLinkGenerator() {
 
     setFilename(extractedFilename);
 
+    // Clean up address bar URL to show /drive/filename.iso instead of ?file=filename.iso
+    window.history.replaceState(null, '', '/drive/' + extractedFilename);
+
     const checkAndGenerate = async () => {
       let isWorkersReachable = false;
       const controller = new AbortController();
