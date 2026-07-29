@@ -2,36 +2,19 @@ import React, { useState, useEffect } from 'react';
 import useIsBrowser from '@docusaurus/useIsBrowser';
 import { useLocation } from '@docusaurus/router';
 
-// ─── URL Configuration ────────────────────────────────────────────────────────
-const URL_CONFIG = {
-  workers: [
-    'https://delivery.temp-drive.workers.dev/',
-  ],
-  normal: [
-    'https://temp-delivery.ntriver.org/',
-    'https://temp-delivery.deadtrain.dev/'
-  ],
-};
-// ─────────────────────────────────────────────────────────────────────────────
-
-// Fixed canary to test if the workers.dev domain is reachable.
-const WORKERS_CANARY = 'https://workers.dev/';
-
-function pickRandom(list) {
-  return list[Math.floor(Math.random() * list.length)];
-}
-
 export default function DriveLinkGenerator() {
   const isBrowser = useIsBrowser();
-  const location = useLocation();
+  const { search } = useLocation();
   const [outputUrl, setOutputUrl] = useState('');
   const [filename, setFilename] = useState('');
+  const [country, setCountry] = useState('');
   const [isChecking, setIsChecking] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!isBrowser) return;
 
-    const searchParams = new URLSearchParams(location.search);
+    const searchParams = new URLSearchParams(search);
     const extractedFilename = searchParams.get('file');
 
     if (!extractedFilename) {
@@ -44,40 +27,53 @@ export default function DriveLinkGenerator() {
     // Clean up address bar URL to show /drive/filename.iso instead of ?file=filename.iso
     window.history.replaceState(null, '', '/drive/' + extractedFilename);
 
-    const checkAndGenerate = async () => {
-      let isWorkersReachable = false;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5s timeout
+    const controller = new AbortController();
 
+    const fetchLink = async () => {
       try {
-        // Ping the workers URL to check if the domain is accessible
-        await fetch(WORKERS_CANARY, {
-          method: 'HEAD',
-          mode: 'no-cors',
-          signal: controller.signal
-        });
-        isWorkersReachable = true;
-      } catch (e) {
-        isWorkersReachable = false; // Blocked or timed out
+        const response = await fetch(
+          `https://delivery-api.ntriver.org/generate-link?filename=${encodeURIComponent(extractedFilename)}`,
+          { signal: controller.signal }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data && data.success && data.url) {
+          setOutputUrl(data.url);
+          if (data.country) {
+            setCountry(data.country);
+          }
+        } else {
+          setError('Failed to generate download link.');
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Error generating link:', err);
+          setError('Error connecting to link delivery service.');
+        }
       } finally {
-        clearTimeout(timeoutId);
+        setIsChecking(false);
       }
-
-      // Pick from workers if reachable, otherwise fall back to normal domains
-      const baseUrl = isWorkersReachable
-        ? pickRandom(URL_CONFIG.workers)
-        : pickRandom(URL_CONFIG.normal);
-
-      setOutputUrl(`${baseUrl}${extractedFilename}`);
-      setIsChecking(false);
     };
 
-    checkAndGenerate();
-  }, [isBrowser, location]);
+    fetchLink();
+
+    return () => controller.abort();
+  }, [isBrowser]);
 
   if (!isBrowser || isChecking) {
     return <div style={{ marginTop: '2rem' }}>Preparing download...</div>;
   }
+
+  if (error) {
+    return <div style={{ marginTop: '2rem', color: 'red' }}>{error}</div>;
+  }
+
+  const isCN = country?.toUpperCase() === 'CN';
 
   return (
     <div style={{ marginTop: '2rem' }}>
@@ -89,6 +85,11 @@ export default function DriveLinkGenerator() {
           >
             Download - {filename}
           </a>
+        </div>
+      )}
+      {isCN && (
+        <div style={{ marginTop: '1rem', color: 'red' }}>
+          请勿使用迅雷等带有 P2P 加速功能的下载工具，请使用普通下载工具。
         </div>
       )}
     </div>
