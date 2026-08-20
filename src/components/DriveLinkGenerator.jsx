@@ -7,7 +7,6 @@ export default function DriveLinkGenerator() {
   const { search } = useLocation();
   const [outputUrl, setOutputUrl] = useState('');
   const [filename, setFilename] = useState('');
-  const [country, setCountry] = useState('');
   const [isChecking, setIsChecking] = useState(true);
   const [error, setError] = useState('');
 
@@ -44,9 +43,6 @@ export default function DriveLinkGenerator() {
 
         if (data && data.success && data.url) {
           setOutputUrl(data.url);
-          if (data.country) {
-            setCountry(data.country);
-          }
         } else {
           setError('Failed to generate download link.');
         }
@@ -73,8 +69,6 @@ export default function DriveLinkGenerator() {
     return <div style={{ marginTop: '2rem', color: 'red' }}>{error}</div>;
   }
 
-  const isCN = country?.toUpperCase() === 'CN';
-
   return (
     <div style={{ marginTop: '2rem' }}>
       {outputUrl && (
@@ -85,11 +79,6 @@ export default function DriveLinkGenerator() {
           >
             Download - {filename}
           </a>
-        </div>
-      )}
-      {isCN && (
-        <div style={{ marginTop: '1rem', color: 'red' }}>
-          请勿使用迅雷等带有 P2P 加速功能的下载工具，请使用普通下载工具。
         </div>
       )}
     </div>
