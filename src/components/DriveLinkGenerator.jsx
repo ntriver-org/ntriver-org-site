@@ -13,8 +13,8 @@ export default function DriveLinkGenerator() {
   useEffect(() => {
     if (!isBrowser) return;
 
-    const searchParams = new URLSearchParams(search);
-    const extractedFilename = searchParams.get('file');
+    const rawQuery = search.startsWith('?') ? search.slice(1) : search;
+    const extractedFilename = decodeURIComponent(rawQuery);
 
     if (!extractedFilename) {
       window.location.replace('/download-windows-office');
@@ -22,9 +22,6 @@ export default function DriveLinkGenerator() {
     }
 
     setFilename(extractedFilename);
-
-    // Clean up address bar URL to show /drive/filename.iso instead of ?file=filename.iso
-    window.history.replaceState(null, '', '/drive/' + extractedFilename);
 
     const controller = new AbortController();
 
