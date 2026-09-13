@@ -106,7 +106,7 @@ export default function DriveLinkGenerator() {
     const fetchLink = async () => {
       try {
         const response = await fetch(
-          `https://ntriver.org/api/drive/generate-link?filename=${encodeURIComponent(extractedFilename)}`,
+          `/api/drive/generate-link?filename=${encodeURIComponent(extractedFilename)}`,
           { signal: controller.signal }
         );
 
