@@ -89,7 +89,8 @@ export default function DriveLinkGenerator() {
     if (!isBrowser) return;
 
     const rawQuery = search.startsWith('?') ? search.slice(1) : search;
-    const extractedFilename = decodeURIComponent(rawQuery);
+    const filenameRaw = rawQuery.split(/[&=?#;]/)[0];
+    const extractedFilename = decodeURIComponent(filenameRaw);
 
     if (!extractedFilename) {
       window.location.replace('/download-windows-office');
@@ -106,7 +107,7 @@ export default function DriveLinkGenerator() {
     const fetchLink = async () => {
       try {
         const response = await fetch(
-          `/api/drive/generate-link?filename=${encodeURIComponent(extractedFilename)}`,
+          `https://ntriver.org/api/drive/generate-link?filename=${encodeURIComponent(extractedFilename)}`,
           { signal: controller.signal }
         );
 
