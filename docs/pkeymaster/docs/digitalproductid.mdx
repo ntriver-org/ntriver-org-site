@@ -196,7 +196,7 @@ $bytes = New-Object byte[] 16
 
 ### Step 2: Check the N-injection flag
 
-Some product keys contain the letter `N` (e.g. `98NKM-KC6J9-2QGVJ-GMQJT-MPV6T`). These are called **PKey2009** keys and were introduced in Windows 8. The `N` is not part of the Base24 alphabet. It is a special marker injected during decoding. For a deeper look at how PKey2009 keys work, see the [Decode PKey2009 Keys](/pkeymaster/decode-pkey2009-keys) guide.
+Some product keys contain the letter `N` (e.g. `98NKM-KC6J9-2QGVJ-GMQJT-MPV6T`). These are called **PKey2009** keys and were introduced in Windows 8. The `N` is not part of the Base24 alphabet. It is a special marker injected during decoding. For a deeper look at how PKey2009 keys work, see the [Decode PKey2009 Keys](/pkeymaster/pkey2009-keys) guide.
 
 To indicate that an `N` must be injected, Microsoft sets a single bit inside the raw `CDKeyBytes` data: **bit 3 of the 15th byte** (the last usable byte). Think of it as a tiny on/off switch hidden inside the key bytes:
 

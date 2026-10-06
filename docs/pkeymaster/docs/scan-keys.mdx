@@ -96,7 +96,7 @@ C:\Program Files\Microsoft Office\root\vfs\ProgramFilesCommonX64\Microsoft Share
 
 ## Scan DPID in Files
 
-Scans files for [Digital Product ID (DPID)](decode-digitalproductid) binary blobs. DPIDs can appear as raw binary data or as hex-encoded text (e.g. in `.reg` files). The script detects and parses DPID structures in version 2, 3, and 4 format, and decodes them to show the embedded product key, Product ID, and integrity check results.
+Scans files for [Digital Product ID (DPID)](digitalproductid) binary blobs. DPIDs can appear as raw binary data or as hex-encoded text (e.g. in `.reg` files). The script detects and parses DPID structures in version 2, 3, and 4 format, and decodes them to show the embedded product key, Product ID, and integrity check results.
 
 - Supports scanning a single file or an entire folder.
 - Supports a Recurse option to include subdirectories when scanning a folder.
@@ -186,7 +186,7 @@ Time               : 0.174 s
 
 ## Get Keys From Registry
 
-Scans the Windows registry for [Digital Product ID (DPID)](decode-digitalproductid) binary values, and decodes them to recover embedded product keys. There are three separate options depending on what you want to scan:
+Scans the Windows registry for [Digital Product ID (DPID)](digitalproductid) binary values, and decodes them to recover embedded product keys. There are three separate options depending on what you want to scan:
 
 - **Get Windows Keys From Registry**: scans `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion`, `HKLM\SOFTWARE\Microsoft\Internet Explorer\Registration`, their `WOW6432Node` equivalents, and `HKLM\SYSTEM\WPA` on Windows XP/2003.
 - **Get Office Keys From Registry**: scans `HKLM\SOFTWARE\Microsoft\Office` and `WOW6432Node` equivalents (MSI-based Office installations only).
