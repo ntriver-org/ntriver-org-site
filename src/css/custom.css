@@ -420,6 +420,64 @@ table tr:nth-child(even) th {
   display: none !important;
 }
 
+/* -- Method cards (SS64 Reference Style) ----------------------- */
+.method-compat-note {
+  font-size: 0.88rem;
+  color: var(--ifm-color-secondary-darkest, #666);
+  margin-top: -6px;
+  margin-bottom: 12px;
+}
+
+[data-theme='dark'] .method-compat-note {
+  color: #9da2a8;
+}
+
+.method-card {
+  border: 1px solid var(--method-card-border);
+  border-left: 4px solid var(--method-card-accent);
+  background-color: var(--method-card-bg);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin: 12px 0 24px;
+}
+
+.method-card ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.method-card pre {
+  margin: 8px 0 12px;
+}
+
+.method-card--primary,
+.method-card--blue {
+  --method-card-accent: #0060c0;
+  --method-card-border: #add2f7;
+  --method-card-bg: #dfedfa;
+}
+
+.method-card--secondary,
+.method-card--gray {
+  --method-card-accent: #6c757d;
+  --method-card-border: #c2c8ce;
+  --method-card-bg: #edf0f2;
+}
+
+[data-theme='dark'] .method-card--primary,
+[data-theme='dark'] .method-card--blue {
+  --method-card-accent: #5ba4e0;
+  --method-card-border: #3d6894;
+  --method-card-bg: #27384a;
+}
+
+[data-theme='dark'] .method-card--secondary,
+[data-theme='dark'] .method-card--gray {
+  --method-card-accent: #949ba4;
+  --method-card-border: #4e5058;
+  --method-card-bg: #383a40;
+}
+
 /* Drive page download button - matches navbar active pill exactly */
 .drive-download-btn {
   display: inline-block;

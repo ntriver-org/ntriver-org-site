@@ -6,6 +6,44 @@ sidebar_position: 3
 
 ---
 
+## 0.4
+
+- Added support for checking [Redeem keys](/pkeymaster/redeem-keys). Thanks to [Ex Pert](https://discord.com/users/823639098098319381) for sharing the keys and info.
+- Added support for scanning OSPP trusted store keys. Thanks to [May](https://github.com/ave9858) for finding the AES key.
+- [Patched](/pkeymaster/pidgenx.dll#pkey2005-security-patch) PidGenX.dll to reveal PKey2005 key's security value.
+- Removed the ActConfigId patch from PidGenX.dll. It is now [calculated](/pkeymaster/actconfigid) in the script.
+- Fixed an issue where keys could not be checked on ARM64 systems.
+- Added 'sep=,' to CSV file exports to fix Excel column collapsing in Russian and European locales.
+- Fixed an issue where the pkeyconfig profiles list does not appear with PowerShell 2.0.
+- Added UTC time fetching from Microsoft NCSI to handle out-of-sync system clocks in the CID script.
+- Extended DPoP token expiration for slow connections in the CID script.
+- Rearranged pkeyconfig folders to solve a long path issue.
+- Fixed a DPI scaling issue causing blurry UI on high-DPI displays.
+- Improved tab styling and increased font and window size for better readability.
+- Various other fixes and improvements.
+
+#### PowerShell launcher
+
+- Added a PowerShell command to download and run PKeyMaster:
+  - `irm https://get.ntriver.org/pkeymaster | iex`
+
+#### PKeyConfig updates
+
+- Added pkeyconfigs for the following products: Thanks to [Sajjo](https://forums.mydigitallife.net/threads/pkeymaster-key-validation-get-cid-pkeyconfig-reader-and-advanced-key-scanning.90410/#post-1915529) for finding some obscure products.
+  - .NET Micro Framework Porting Kit v3.0
+  - Advanced Threat Analytics 1.4 and later
+  - AutoCollage 2008 Academic v1.1
+  - Research Automatic Graph Layout
+  - Expression Studio 1, 2, 3 and 4
+  - Songsmith Academic 1.03
+  - Windows Embedded Compact 7
+  - Windows Embedded Compact 2013
+  - Various beta versions of Visual Studio
+- Updated pkeyconfigs for the following products:
+  - `Windows 10 1607 - Server 2016` (New ESU IDs) (2026-09-14 - KB5129239)
+
+---
+
 ## 0.3
 
 - Added support for scanning token store keys on Vista using [vistaspctl](https://github.com/InvoxiPlayGames/vistaspctl) method by @InvoxiPlayGames

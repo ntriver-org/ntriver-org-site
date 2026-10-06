@@ -24,11 +24,9 @@ PKeyMaster applies the following patches to achieve some extra functionality.
 
 Applied to the 32-bit file so this 26040 build can run on older Windows versions.
 
-### ActConfigId Patch
+### PKey2005 security patch
 
-Applied to both files so it can reveal the hidden ActConfigId for a product key.  
-ActConfigId example: `msft2005:b793ff2d-9d80-407c-b521-85111c51028c&ABH1bD8BAAAAAAAA`  
-This ID is used in key certification and activation.
+Applied to both files so it can reveal the hidden security value of a PKey2005 (Vista, 7, Office 2010) product key.
 
 ### Signature Patch
 
@@ -48,8 +46,8 @@ c81dbd2517f6c062aa3d27ebc3d19d06908eea4943a0c571f56862db19e42964 *pidgenx32origi
 **Patched PidGenX.dll SHA-256 checksums:** (Used in PKeyMaster)
 
 ```
-8af34350c30bb85e1e93075da07dc023fe72be608bf43166d8217fdaced998b8 *pidgenx32.dll
-e4593a7b96339023f55bab9f1f45b2b1706dbcc81f71b8626f30c9bed17f6017 *pidgenx64.dll
+e28f3fe6e918620433969c1e62f28277552af0b7bcbb6c30e81046042245913b *pidgenx32.dll
+d16f212289fe29c019a6c4e9cebb424aec0255094fd00ccfd3360260be008dd8 *pidgenx64.dll
 ```
 
 You can patch the [original](https://app.box.com/s/jo7rrvwc9adw8kpnckfcwqkttzx6j8oo) files yourself using the following PowerShell command. The result would be an identical file to the one used in PKeyMaster.
@@ -62,10 +60,54 @@ This way you can ensure exactly what is changed in the file.
 
 ```powershell
 $bytes = [System.IO.File]::ReadAllBytes(".\pidgenx32original.dll")
-# Msvcrt patch
+
+# PE Checksum
 $bytes[336] = 0x00
 $bytes[337] = 0x00
 $bytes[338] = 0x00
+
+# PKey2005 security patch
+$bytes[28992] = 0x50
+$bytes[28993] = 0x52
+$bytes[28994] = 0xe8
+$bytes[28999] = 0x58
+$bytes[29000] = 0x8b
+$bytes[29001] = 0x51
+$bytes[29002] = 0x40
+$bytes[29003] = 0x89
+$bytes[29004] = 0x90
+$bytes[29005] = 0xb9
+$bytes[29006] = 0x78
+$bytes[29007] = 0x08
+$bytes[29009] = 0x5a
+$bytes[29010] = 0x58
+$bytes[29011] = 0x8b
+$bytes[29012] = 0xff
+$bytes[29013] = 0x55
+$bytes[29014] = 0x8b
+$bytes[29015] = 0xec
+$bytes[29016] = 0xe9
+$bytes[29017] = 0x7f
+$bytes[29018] = 0x4c
+$bytes[48599] = 0xe9
+$bytes[48600] = 0x64
+$bytes[48601] = 0xb3
+$bytes[48602] = 0xff
+$bytes[48603] = 0xff
+
+# Signature patch
+$bytes[101248] = 0x31
+$bytes[101249] = 0xc0
+$bytes[101250] = 0xc2
+$bytes[101251] = 0x18
+$bytes[101252] = 0x00
+$bytes[387625] = 0x31
+$bytes[387626] = 0xc0
+$bytes[387627] = 0xc2
+$bytes[387628] = 0x0c
+$bytes[387629] = 0x00
+
+# Msvcrt patch
 $bytes[587256] = 0x00
 $bytes[587257] = 0x00
 $bytes[587259] = 0x5f
@@ -91,84 +133,6 @@ $bytes[587279] = 0x00
 $bytes[587280] = 0x00
 $bytes[587281] = 0x00
 
-# Actconfig patch
-$bytes[42039] = 0xe5
-$bytes[42040] = 0x3d
-$bytes[42041] = 0x08
-$bytes[42042] = 0x00
-$bytes[582176] = 0x5e
-$bytes[582177] = 0xe8
-$bytes[582178] = 0x1e
-$bytes[582179] = 0xc0
-$bytes[582180] = 0xf7
-$bytes[582181] = 0xff
-$bytes[582182] = 0x85
-$bytes[582183] = 0xc0
-$bytes[582184] = 0x78
-$bytes[582185] = 0x3d
-$bytes[582186] = 0x8b
-$bytes[582187] = 0x4d
-$bytes[582188] = 0x08
-$bytes[582189] = 0x85
-$bytes[582190] = 0xc9
-$bytes[582191] = 0x74
-$bytes[582192] = 0x36
-$bytes[582193] = 0x8b
-$bytes[582194] = 0x09
-$bytes[582195] = 0x85
-$bytes[582196] = 0xc9
-$bytes[582197] = 0x74
-$bytes[582198] = 0x30
-$bytes[582199] = 0x50
-$bytes[582200] = 0x9c
-$bytes[582201] = 0x60
-$bytes[582202] = 0xe8
-$bytes[582207] = 0x58
-$bytes[582208] = 0x8d
-$bytes[582209] = 0x80
-$bytes[582210] = 0x83
-$bytes[582211] = 0x06
-$bytes[582214] = 0xba
-$bytes[582215] = 0x80
-$bytes[582219] = 0x66
-$bytes[582220] = 0x8b
-$bytes[582221] = 0x19
-$bytes[582222] = 0x66
-$bytes[582223] = 0x89
-$bytes[582224] = 0x18
-$bytes[582225] = 0x83
-$bytes[582226] = 0xc1
-$bytes[582227] = 0x02
-$bytes[582228] = 0x83
-$bytes[582229] = 0xc0
-$bytes[582230] = 0x02
-$bytes[582231] = 0x66
-$bytes[582232] = 0x85
-$bytes[582233] = 0xdb
-$bytes[582234] = 0x74
-$bytes[582235] = 0x03
-$bytes[582236] = 0x4a
-$bytes[582237] = 0x75
-$bytes[582238] = 0xec
-$bytes[582239] = 0x66
-$bytes[582240] = 0xc7
-$bytes[582244] = 0x61
-$bytes[582245] = 0x9d
-$bytes[582246] = 0x58
-$bytes[582247] = 0x56
-$bytes[582248] = 0xc3
-
-# Signature patch
-$bytes[101248] = 0x31
-$bytes[101249] = 0xc0
-$bytes[101250] = 0xc2
-$bytes[101251] = 0x18
-$bytes[101252] = 0x00
-$bytes[387625] = 0x31
-$bytes[387626] = 0xc0
-$bytes[387627] = 0xc2
-$bytes[387628] = 0x0c
-$bytes[387629] = 0x00
 [System.IO.File]::WriteAllBytes(".\pidgenx32.dll", $bytes)
 ```
 
@@ -181,71 +145,53 @@ $bytes[387629] = 0x00
 
 ```powershell
 $bytes = [System.IO.File]::ReadAllBytes(".\pidgenx64original.dll")
-# Actconfig patch
+
+# PE Checksum
 $bytes[344] = 0x00
 $bytes[345] = 0x00
 $bytes[346] = 0x00
-$bytes[20433] = 0x40
-$bytes[20434] = 0xa0
-$bytes[20435] = 0x09
-$bytes[20436] = 0x00
-$bytes[20855] = 0x9a
-$bytes[20856] = 0x9e
-$bytes[20857] = 0x09
-$bytes[20858] = 0x00
-$bytes[651285] = 0x4c
-$bytes[651286] = 0x8d
-$bytes[651287] = 0x15
-$bytes[651288] = 0xdc
-$bytes[651289] = 0x06
-$bytes[651290] = 0x01
-$bytes[651291] = 0x00
-$bytes[651292] = 0x4c
-$bytes[651293] = 0x8b
-$bytes[651294] = 0xd9
-$bytes[651295] = 0x41
-$bytes[651296] = 0xb9
-$bytes[651297] = 0x80
-$bytes[651298] = 0x00
-$bytes[651299] = 0x00
-$bytes[651300] = 0x00
-$bytes[651301] = 0x66
-$bytes[651302] = 0x41
-$bytes[651303] = 0x8b
-$bytes[651304] = 0x03
-$bytes[651305] = 0x66
-$bytes[651306] = 0x41
-$bytes[651307] = 0x89
-$bytes[651308] = 0x02
-$bytes[651309] = 0x49
-$bytes[651310] = 0x83
-$bytes[651311] = 0xc3
-$bytes[651312] = 0x02
-$bytes[651313] = 0x49
-$bytes[651314] = 0x83
-$bytes[651315] = 0xc2
-$bytes[651316] = 0x02
-$bytes[651317] = 0x66
-$bytes[651318] = 0x85
-$bytes[651319] = 0xc0
-$bytes[651320] = 0x74
-$bytes[651321] = 0x05
-$bytes[651322] = 0x41
-$bytes[651323] = 0xff
-$bytes[651324] = 0xc9
-$bytes[651325] = 0x75
-$bytes[651326] = 0xe6
-$bytes[651327] = 0x66
-$bytes[651328] = 0x41
-$bytes[651329] = 0xc7
-$bytes[651330] = 0x02
-$bytes[651331] = 0x00
-$bytes[651332] = 0x00
-$bytes[651333] = 0xe9
-$bytes[651334] = 0x02
-$bytes[651335] = 0x5c
-$bytes[651336] = 0xf6
-$bytes[651337] = 0xff
+
+# PKey2005 security patch
+$bytes[31192] = 0xe8
+$bytes[31193] = 0x83
+$bytes[31194] = 0x76
+$bytes[31195] = 0x09
+$bytes[31196] = 0x00
+$bytes[31197] = 0x90
+$bytes[31198] = 0x90
+$bytes[31199] = 0x90
+$bytes[31200] = 0x90
+$bytes[31201] = 0x90
+$bytes[31202] = 0x90
+$bytes[31203] = 0x90
+$bytes[31204] = 0x90
+$bytes[31205] = 0x90
+$bytes[31206] = 0x90
+$bytes[651360] = 0x4c
+$bytes[651361] = 0x8b
+$bytes[651362] = 0xf1
+$bytes[651363] = 0x8b
+$bytes[651364] = 0x41
+$bytes[651365] = 0x48
+$bytes[651366] = 0x89
+$bytes[651367] = 0x05
+$bytes[651368] = 0x94
+$bytes[651369] = 0x08
+$bytes[651370] = 0x01
+$bytes[651371] = 0x00
+$bytes[651372] = 0x33
+$bytes[651373] = 0xd2
+$bytes[651374] = 0x41
+$bytes[651375] = 0xb8
+$bytes[651376] = 0x80
+$bytes[651377] = 0x00
+$bytes[651378] = 0x00
+$bytes[651379] = 0x00
+$bytes[651380] = 0x48
+$bytes[651381] = 0x8d
+$bytes[651382] = 0x4d
+$bytes[651383] = 0xf0
+$bytes[651384] = 0xc3
 
 # Signature patch
 $bytes[106241] = 0x31
@@ -254,6 +200,7 @@ $bytes[106243] = 0xc3
 $bytes[434892] = 0x31
 $bytes[434893] = 0xc0
 $bytes[434894] = 0xc3
+
 [System.IO.File]::WriteAllBytes(".\pidgenx64.dll", $bytes)
 ```
 
@@ -399,39 +346,35 @@ if ($result -eq 0 -and $iid) {
 
 This returns the Installation ID, Edition (e.g., `Professional`), Channel (e.g., `Retail`), and Part Number.
 
-### Extracting ActConfigId
+### Extracting the PKey2005 Security Value
 
-The `ActConfigId` is required for key activation and certification against Microsoft servers. Unlike the IID, it is not officially exported by any PidGenX function.
+PKey2005 keys (used by Windows Vista, 7, and Office 2010) contain a hidden **security value** embedded in the encoded key data. This value is required to reconstruct the `ActConfigId`, which is needed for key activation and certification against Microsoft servers.
 
-However, since we are using a [patched](pidgenx.dll#actconfigid-patch) version of `PidGenX.dll`, this string is leaked into a static memory offset after a successful key validation.
+The security value is not returned by any official PidGenX export. However, the [patched PidGenX.dll](pidgenx.dll#pkey2005-security-patch) captures it into a static memory offset after a successful key validation, so it can be read from the loaded DLL's memory.
 
-To do this, first use the patched `pidgenx64.dll` or `pidgenx32.dll` from PKeyMaster to validate a key. After a successful validation, you can run the following code in the same process to read it directly from the DLL's memory in PowerShell:
 
+To do this, first use the patched `pidgenx64.dll` or `pidgenx32.dll` from PKeyMaster to validate a Windows 7 key `RHTBY-VWY6D-QJRJ9-JGQ3X-Q2289` with Windows 7 PKeyConfig File. After a successful validation, you can run the following code in the same process to read it directly from the DLL's memory in PowerShell:
 ```powershell
-# The offset where ActConfigId is stored in the patched 26040 build
+# The offset where the PKey2005 security value is stored in the patched 26040 build
 $is64Bit = [Environment]::Is64BitProcess
-$captureOffset = if ($is64Bit) { 0xAF6F8 } else { 0x8F4C2 }
+$securityOffset = if ($is64Bit) { 0xAF900 } else { 0x8F600 }
 $dllName = if ($is64Bit) { "pidgenx64.dll" } else { "pidgenx32.dll" }
 
 # Get the base address of the loaded pidgenx dll
-$baseAddress = [System.Diagnostics.Process]::GetCurrentProcess().Modules |
+$hModule = [System.Diagnostics.Process]::GetCurrentProcess().Modules |
     Where-Object { $_.ModuleName -eq $dllName } |
     Select-Object -ExpandProperty BaseAddress
 
-if ($baseAddress) {
-    $bufferPtr = [IntPtr]::Add($baseAddress, $captureOffset)
+if ($hModule) {
+    $securityPtr = [IntPtr]($hModule.ToInt64() + $securityOffset)
 
-    # Read the Unicode string from memory
-    $actConfigId = [System.Runtime.InteropServices.Marshal]::PtrToStringUni($bufferPtr)
-
-    # Validate the format
-    if ($actConfigId -match '^(?i)msft200[59]:[^\s]+$') {
-        Write-Host "ActConfig ID: $actConfigId"
-    } else {
-        Write-Host "ActConfig ID not found in memory."
-    }
+    # Read the 32-bit integer security value
+    $security = [System.Runtime.InteropServices.Marshal]::ReadInt32($securityPtr)
+    Write-Host ("Security: {0} (0x{0:X})" -f $security)
 }
 ```
+
+This returns the integer security value embedded in the PKey2005 key (e.g. `Security: 847 (0x34F)`).
 
 ---
 

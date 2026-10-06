@@ -1,0 +1,200 @@
+---
+sidebar_position: 11
+slug: /pkeymaster/redeem-keys
+---
+
+# Redeem Keys
+
+The **Redeem Status** option in [PKeyMaster](/pkeymaster) lets you check the status of Microsoft redeem keys without consuming them.
+
+---
+
+## What are redeem keys?
+
+- Redeem keys are also known as PIN keys, redeem codes, prepaid codes, gift cards, tokens, and product keys.
+- They come in the standard 25-character (5x5) format and include both numbers and letters. They do not include the characters `A, E, I, O, U, L, S, 0, 1, or 5`.
+- Algorithmically, they come in the following two formats:
+  - [PKey2009](/pkeymaster/pkey2009-keys)
+  - An unknown algorithm whose keys contain a `Z` character at the end.
+- They are used across a wide variety of Microsoft products, such as Xbox, Microsoft Office, Dynamics, Copilot, Power BI, etc.
+- They are typically sold through the Microsoft Store, Amazon, Walmart, local electronics shops, and similar retailers.
+- Redeem keys have no value until they are activated by the retailer at the point of sale. They also come with a validity period, and if you don't redeem the key within that period, it will expire.
+- They are redeemed on a Microsoft account. Once redeemed (linked), they can't be transferred to another account.
+
+---
+
+## Checking redeem key status
+
+Microsoft has several web portals and apps for checking the status of and redeeming keys for various products.
+The following are some known examples, though there may be more that are not listed here.
+
+| Portal | Covers all products? | Login required? |
+|:----------:|:---------------------:|:---------------:|
+| [Microsoft account](https://redeem.microsoft.com/) | No | Yes |
+| [Microsoft 365 Business](https://signup.microsoft.com/get-started/setupKey) | No | No |
+| [Microsoft 365 Family](https://setup.office.com/) | No | Yes |
+| [Xbox codes or gift cards](https://support.xbox.com/help/subscriptions-billing/redeem-codes-gifting/digital-code-solution) | No | Yes |
+| [Visual Studio](https://my.visualstudio.com/Subscriptions/) | No | Yes |
+| Microsoft Store App | No | Yes |
+| Microsoft Office Apps (OLSC API) | Yes | No |
+
+As shown above, Microsoft Office Apps do not require a login to check the status and cover all products.
+PKeyMaster uses this OLSC API endpoint to check the status of redeem keys.
+
+---
+
+## OLSC API Samples
+
+### Sample request
+
+An HTTP GET request:
+
+```
+https://licensing.m365.svc.cloud.microsoft/olsc/olsconfig.svc/pin/v3/399V4-XXKJY-RDFD2-FC9MD-Y2TYZ
+```
+
+While this works, the script uses a slightly modified request to mimic a request from Office apps, where the `id` parameter is a randomly generated GUID.
+
+```http
+GET https://licensing.m365.svc.cloud.microsoft/olsc/olsconfig.svc/pin/v3/399V4-XXKJY-RDFD2-FC9MD-Y2TYZ?id=EDE966C6-89EA-4E8D-81F5-7F5ED207AE65 HTTP/1.1
+Connection: Keep-Alive
+Content-Type: application/json
+User-Agent: Microsoft Office/16.0 (Windows NT 10.0; Microsoft Excel 16.0.20520; Pro)
+Host: licensing.m365.svc.cloud.microsoft
+```
+
+### Sample response (Valid key)
+
+```json
+{
+  "Acid": "99999999-9999-9999-9999-999999999999",
+  "GroupId": 2960,
+  "Pin": "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
+  "Pkpn": "864a1dee-1b90-4931-81d7-a741a4691b97",
+  "Result": "Valid"
+}
+```
+
+### Sample response (Already redeemed)
+
+```json
+{
+  "Acid": "7FE09EEF-5EED-4733-9A60-D7019DF11CAC",
+  "GroupId": 1,
+  "Pin": "399V4-XXKJY-RDFD2-FC9MD-Y2TYZ",
+  "Pkpn": "X21-75515",
+  "Result": "Used"
+}
+```
+
+### Sample response (Scrapped key)
+
+```json
+{
+  "Acid": "8D77DE46-78FB-428D-B8C4-C4A078E8912D",
+  "GroupId": 1,
+  "Pin": "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
+  "Pkpn": "X22-74203",
+  "Result": "InvalidToken"
+}
+```
+
+### Sample response (Not a redeem key)
+
+```json
+{
+  "Acid": "",
+  "GroupId": 0,
+  "Pin": "VK7JG-NPHTM-C97JM-9MPGT-3V66T",
+  "Pkpn": "",
+  "Result": "InvalidToken"
+}
+```
+
+### Sample response (Invalid format)
+
+```json
+{
+  "Acid": null,
+  "GroupId": 0,
+  "Pin": "XXX",
+  "Pkpn": null,
+  "Result": "InvalidFormat"
+}
+```
+
+---
+
+## Redeem key validation results
+
+| Result Field | Has PKPN | Status  |
+| :--- | :--- | :--- |
+| `Valid` | Yes | Key can be redeemed |
+| `Used` | Yes | Key already redeemed |
+| `InvalidToken` | Yes | Scrapped redeem key (Validity expired) |
+| `InvalidToken` | No | Not a redeem key |
+| `InvalidFormat` | No | Invalid key format |
+
+---
+
+## Detection in PKeyMaster
+
+You can view the status of a redeem key by enabling the checkbox named `Redeem Status`. As noted above, redeem keys come in two formats:
+- [PKey2009](/pkeymaster/pkey2009-keys) algorithm
+- An unknown algorithm whose keys contain a `Z` character at the end
+
+Redeem keys are generally different from traditional product keys, so they typically won't match any `pkeyconfig` profile.
+However, Microsoft Office `ltPIN` EULA keys are redeem keys that are referenced in pkeyconfigs.
+Some other Office key types can also be hybrid, meaning they function as traditional product keys but can additionally be redeemed as redeem keys.
+
+When the **Redeem Status** option is enabled, PKeyMaster queries the [OLSC API](#sample-request) to check the redeem status for PKey2009 keys (excluding Volume, OEM, and Eval) and keys ending in `Z`.
+
+---
+
+## Supported products
+
+- All Microsoft products that use redeem keys. This includes:
+    - Microsoft Office
+    - Windows 365
+    - Dynamics 365
+    - Entra ID
+    - Microsoft Defender for Endpoint
+    - Azure
+    - Copilot
+    - Visual Studio
+    - Partner Marketing Center Pro
+    - Power BI
+    - Xbox
+    - Microsoft Store
+    - and more
+
+---
+
+## Sample check in PKeyMaster
+
+Here is an example output when checking a PKey2009 redeem key in Key Checker with the **Redeem Status** option enabled.
+
+```
+Checking Key: RJN2W-8D6XY-V3BVP-HR4TC-2DM2V
+
+Product Key       : RJN2W-8D6XY-V3BVP-HR4TC-2DM2V
+Result            : This key is valid with no profile match. It may be a redeem key.
+Algorithm ID      : msft:rm/algorithm/pkey/2009
+Group ID          : 4005 (0xFA5)
+Key ID            : 95078250 (0x5AAC76A)
+Security          : 7647201539136661 (0x1B2B16DB441C95)
+PKey2009 Extra    : 0
+Upgrade Key       : No
+
+Redeem Key Status : Key already redeemed
+Redeem Acid       : 7FE09EEF-5EED-4733-9A60-D7019DF11CAC
+Redeem GroupId    : 1
+Redeem Pkpn       : X21-75518
+Query Time        : 3.015 s
+```
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

@@ -1,0 +1,559 @@
+---
+sidebar_position: 12
+slug: /pkeymaster/actconfigid
+---
+
+# ActConfigId
+
+The **ActConfigId** is a value that Microsoft's licensing servers require when checking or activating a product key. PKeyMaster calculates it after a successful key validation and shows it in the Key Checker output.
+
+---
+
+## What is it?
+
+- The ActConfigId is required when communicating with Microsoft licensing servers for [Key Certification](/pkeymaster/key-certification) and [Key Activation](/pkeymaster/key-activation).
+- It binds the Activation ID and key-specific parameters (Upgrade flag, Serial / Key ID, Group ID, Security) into a compact Base64 token.
+- It comes in the following format:
+
+```
+msft2009:df96023b-dcd9-4be2-afa0-c6c871159ebe&AgAAAJoH2NSFU3D8JA==
+\______/ \__________________________________/ \__________________/
+ Prefix       Activation ID (SKU GUID)           Base64 payload
+```
+
+- It has two parts joined by `&`:
+  - **Prefix + SKU GUID**: Identifies the algorithm (`msft2009` or `msft2005`) and the product Activation ID from the pkeyconfig.
+  - **Base64 payload**: A bit-packed binary payload carrying the key's licensing parameters.
+- Algorithmically, it comes in the following two formats:
+
+| Prefix | Algorithm | Payload size | Supported products |
+| :--- | :---: | :---: | :--- |
+| `msft2009:` | PKey2009 | 13 bytes (104 bits) | Windows 8 / Office 2013 and later |
+| `msft2005:` | PKey2005 | 12 bytes (96 bits) | Windows Vista, 7, Office 2010 |
+
+- If the ActConfigId is missing or invalid, Microsoft servers will reject the request with error `0xC004C00D` (`PA Invalid ActConfigId`).
+
+---
+
+## Payload structure
+
+Key fields are packed sequentially starting from bit offset 0.
+
+### PKey2009 field layout (13 bytes / 104 bits)
+
+| Field | Bit offset | Bit length | Source |
+| :--- | :---: | :---: | :--- |
+| Upgrade | 0 | 1 | DigitalProductId (`1` for upgrade keys, `0` otherwise) |
+| Serial (Key ID) | 1 | 30 | Extended PID (numeric Key ID) |
+| Group ID | 31 | 20 | PidGenX / pkeyconfig (`RefGroupID`) |
+| Security | 51 | 53 | Security value extracted by [decoding the PKey2009 key](/pkeymaster/pkey2009-keys) |
+
+### PKey2005 field layout (12 bytes / 96 bits)
+
+| Field | Bit offset | Bit length | Source |
+| :--- | :---: | :---: | :--- |
+| Upgrade | 0 | 1 | DigitalProductId (`1` for upgrade keys, `0` otherwise) |
+| Serial (Key ID) | 1 | 30 | Extended PID (numeric Key ID) |
+| Security | 31 | 20 | Security value from [patched PidGenX.dll](/pkeymaster/pidgenx.dll#pkey2005-security-patch) |
+
+---
+
+## Bit-packing helper functions
+
+A **byte** is a group of 8 **bits**, where each bit is a single `0` or `1`. So 1 byte = 8 bits, 2 bytes = 16 bits, and so on.
+
+PowerShell works with byte arrays (`[byte[]]`), but the payload fields do not line up neatly with byte boundaries. For example, the Serial field starts at bit 1 and ends at bit 30. That means it starts in the middle of Byte 0 and ends in the middle of Byte 3, crossing three byte boundaries along the way.
+
+To pack and unpack these values, two helper functions are used:
+- `Set-ActConfigBits` writes arbitrary bits into a byte array.
+- `Get-ActConfigBits` reads arbitrary bits out of a byte array.
+
+Both functions use the same bit-mapping logic to locate any bit in the array:
+
+To find where a specific bit lives in the array, both functions use the same two calculations:
+
+- **Which byte?** Divide the bit number by 8 and round down to the whole number. For example, bit 17 divided by 8 is 2.125, which rounds down to 2, so Byte 2.
+- **Which position inside that byte?** Take the remainder after dividing by 8. For example, bit 17 is at position `17 % 8 = 1`, so bit 1 of Byte 2.
+
+Bits inside each byte are numbered from right to left, starting at 0:
+
+```text
+Byte 0: [ bit 7 | bit 6 | bit 5 | bit 4 | bit 3 | bit 2 | bit 1 | bit 0 ]
+
+Byte 1 holds bits 8 through 15, Byte 2 holds bits 16 through 23, and so on.
+```
+
+So bit 0 is the rightmost bit of Byte 0, bit 8 is the rightmost bit of Byte 1, bit 17 is bit 1 of Byte 2, and so on.
+
+---
+
+### Writing bits
+
+`Set-ActConfigBits` writes a numeric value into the byte array across a specific bit range.
+
+#### Parameters
+
+- `$Data`: The `[byte[]]` array being modified.
+- `$Offset`: Starting bit position in the array (0-based).
+- `$Length`: Total number of bits to write.
+- `$Value`: The integer value to pack.
+
+#### How it works: Group ID example
+
+Let's use the Group ID value `3892` as the example. It is written at `$Offset = 31` with `$Length = 20`.
+
+First, convert 3892 to binary (20 bits):
+
+```text
+3892 = 00000000111100110100
+       bit 19.........bit 0
+```
+
+The `1` bits are at positions 2, 4, 5, 8, 9, 10, and 11. Every other bit is `0`.
+
+The function loops from `$bit = 0` to `$bit = 19`. For each bit of the value, it checks if it is `1`. If it is `0`, it skips it. If it is `1`, it figures out where in the byte array that bit belongs and turns it on.
+
+Before calling this function, a clean byte array is created like this:
+
+```powershell
+$data = [byte[]]::new(13)  # 13 bytes for PKey2009
+```
+
+`[byte[]]::new(13)` creates an array of 13 bytes, all set to `0x00` (`00000000`) by default. PowerShell does this automatically. The function then only needs to turn specific bits from `0` to `1`, which is why it only ever uses `-bor` (OR) and never needs to clear any bits.
+
+Here is what happens for each bit:
+
+| Value bit | Is it 1? | Absolute position (`31 + bit`) | Byte | Bit in byte | What changes |
+| :---: | :---: | :---: | :---: | :---: | :--- |
+| bit 0 | 0 | 31 | Byte 3 | 7 | Skipped |
+| bit 1 | 0 | 32 | Byte 4 | 0 | Skipped |
+| bit 2 | 1 | 33 | Byte 4 | 1 | Byte 4 bit 1 switched on |
+| bit 3 | 0 | 34 | Byte 4 | 2 | Skipped |
+| bit 4 | 1 | 35 | Byte 4 | 3 | Byte 4 bit 3 switched on |
+| bit 5 | 1 | 36 | Byte 4 | 4 | Byte 4 bit 4 switched on |
+| bit 6 | 0 | 37 | Byte 4 | 5 | Skipped |
+| bit 7 | 0 | 38 | Byte 4 | 6 | Skipped |
+| bit 8 | 1 | 39 | Byte 4 | 7 | Byte 4 bit 7 switched on |
+| bit 9 | 1 | 40 | Byte 5 | 0 | Byte 5 bit 0 switched on |
+| bit 10 | 1 | 41 | Byte 5 | 1 | Byte 5 bit 1 switched on |
+| bit 11 | 1 | 42 | Byte 5 | 2 | Byte 5 bit 2 switched on |
+| bits 12-19 | 0 | 43-50 | Bytes 5-6 | various | All skipped |
+
+**How does the function check one bit at a time?**
+
+`$mask` is a number with exactly one bit set. It starts at `1` (binary `00000001`), meaning only bit 0 is `1`. Each loop, it shifts one position left, so it "scans" through the value from bit 0 upward.
+
+`$Value -band $mask` is the check. It returns `0` if that bit of `$Value` is `0`, or a non-zero number if it is `1`. Here is what that loop looks like in isolation for Group ID `3892`:
+
+```powershell
+$Value = 3892
+[uint64]$mask = 1
+
+for ($bit = 0; $bit -lt 20; $bit++) {
+    $result = $Value -band $mask   # check if this bit is 1
+    Write-Host "bit $bit : mask=$mask  result=$result  -> $(if ($result -ne 0) { 'WRITE' } else { 'skip' })"
+    $mask = $mask -shl 1           # shift mask left to check next bit
+}
+```
+
+Output (first 12 iterations):
+
+```text
+bit 0  : mask=1    result=0    -> skip
+bit 1  : mask=2    result=0    -> skip
+bit 2  : mask=4    result=4    -> WRITE
+bit 3  : mask=8    result=0    -> skip
+bit 4  : mask=16   result=16   -> WRITE
+bit 5  : mask=32   result=32   -> WRITE
+bit 6  : mask=64   result=0    -> skip
+bit 7  : mask=128  result=0    -> skip
+bit 8  : mask=256  result=256  -> WRITE
+bit 9  : mask=512  result=512  -> WRITE
+bit 10 : mask=1024 result=1024 -> WRITE
+bit 11 : mask=2048 result=2048 -> WRITE
+```
+
+The result value itself does not matter. The only question is whether it is `0` or not.
+
+
+**How does it turn a bit on without affecting other bits?**
+
+`-bor` (bitwise OR) is the key. It compares two binary values bit by bit:
+
+- If **either** bit is `1`, the result is `1`
+- If **both** bits are `0`, the result is `0`
+
+This is exactly what we need: turn a specific bit on, leave everything else alone.
+
+Say we need to turn on bit 1 of Byte 4. Here is how it works step by step:
+
+```powershell
+# Start with an empty byte
+$byte = 0x00           # 00000000
+
+# Create a mask with only bit 1 set
+$mask = 1 -shl 1       # 00000010 (decimal 2)
+
+# Merge them with -bor
+$byte = $byte -bor $mask
+# Result: 00000010 (only bit 1 is on)
+```
+
+```text
+Byte 4 before:  00000000
+Mask:           00000010  (1 shifted to position 1)
+After -bor:     00000010  (only bit 1 changed, rest untouched)
+```
+
+In the next iteration, when bit 3 also needs to be set:
+
+```powershell
+$byte = 0x02           # 00000010 (bit 1 already on)
+$mask = 1 -shl 3       # 00001000 (decimal 8)
+$byte = $byte -bor $mask
+# Result: 00001010 (bits 1 and 3 are both on now)
+```
+
+```text
+Byte 4 before:  00000010  (bit 1 already on)
+Mask:           00001000  (1 shifted to position 3)
+After -bor:     00001010  (bit 3 added, bit 1 still there)
+```
+
+Because `-bor` never turns a `1` into a `0`, previously set bits stay on. This is why the function only needs to loop through the `1` bits of the value and apply them one at a time.
+
+#### Function code
+
+```powershell
+function Set-ActConfigBits {
+    param(
+        [byte[]]$Data,    # Target byte array
+        [int]$Offset,     # Starting bit position (0-based)
+        [int]$Length,     # Number of bits to write
+        [uint64]$Value    # Value to write
+    )
+
+    [uint64]$mask = 1
+    for ($bit = 0; $bit -lt $Length; $bit++) {
+        # Check if this bit of Value is 1
+        if (($Value -band $mask) -ne 0) {
+            $byteIndex = [int][Math]::Floor(($Offset + $bit) / 8)
+            $bitIndex  = ($Offset + $bit) % 8
+
+            # Turn on that bit in the target byte
+            $Data[$byteIndex] = [byte]($Data[$byteIndex] -bor (1 -shl $bitIndex))
+        }
+
+        # Move the checker to the next bit
+        $mask = $mask -shl 1
+    }
+}
+```
+
+---
+
+### Reading bits
+
+`Get-ActConfigBits` does the reverse. It reads a specific bit range from the byte array and rebuilds the original number.
+
+The logic is simple: loop through each bit position, check if that bit is `1` in the data, and if so, turn on the same bit in the result value.
+
+#### Function code
+
+```powershell
+function Get-ActConfigBits {
+    param(
+        [byte[]]$Data,    # Source byte array
+        [int]$Offset,     # Starting bit position (0-based)
+        [int]$Length      # Number of bits to read
+    )
+
+    [uint64]$value = 0
+    for ($bit = 0; $bit -lt $Length; $bit++) {
+        $byteIndex = [int][Math]::Floor(($Offset + $bit) / 8)
+        $bitIndex  = ($Offset + $bit) % 8
+
+        # If this bit is set in the byte, set the corresponding bit in the output
+        if (($Data[$byteIndex] -band (1 -shl $bitIndex)) -ne 0) {
+            $value = $value -bor ([uint64]1 -shl $bit)
+        }
+    }
+
+    return $value
+}
+```
+
+---
+
+## Encoding ActConfigId
+
+### PKey2009 encoding
+
+Example from product key `NJCF7-PW8QT-3324D-688JX-2YV66` (Windows Server Next Beta ServerRdsh Retail):
+
+| Parameter | Value |
+| :--- | :--- |
+| SKU GUID (Activation ID) | `df96023b-dcd9-4be2-afa0-c6c871159ebe` |
+| Upgrade | `0` |
+| Serial (Key ID) | `1` |
+| Group ID | `3892` |
+| Security | `1301332316175003` |
+
+#### Step 1: Initialize 13-byte array
+
+```powershell
+$data = [byte[]]::new(13)
+```
+
+Initial state (hex):
+```text
+00 00 00 00 00 00 00 00 00 00 00 00 00
+```
+
+#### Step 2: Write Upgrade flag (bit 0, 1 bit)
+
+```powershell
+Set-ActConfigBits $data -Offset 0 -Length 1 -Value 0
+```
+
+Value is `0`, so no bits are modified.
+
+#### Step 3: Write Serial (bits 1-30, 30 bits)
+
+Serial is `1` (`0x00000001`). Writing at bit offset 1 sets bit 1 of byte 0:
+
+```powershell
+Set-ActConfigBits $data -Offset 1 -Length 30 -Value 1
+```
+
+Payload (hex):
+```text
+02 00 00 00 00 00 00 00 00 00 00 00 00
+```
+
+#### Step 4: Write Group ID (bits 31-50, 20 bits)
+
+Group ID is `3892` (`0x00F34` = binary `00000000111100110100`). Writing across bits 31-50 populates bytes 4 and 5:
+
+```powershell
+Set-ActConfigBits $data -Offset 31 -Length 20 -Value 3892
+```
+
+Payload (hex):
+```text
+02 00 00 00 9A 07 00 00 00 00 00 00 00
+```
+
+#### Step 5: Write Security value (bits 51-103, 53 bits)
+
+Security is `1301332316175003` (`0x49F8E0A70BA9B`). Writing across bits 51-103 populates bytes 6 through 12:
+
+```powershell
+Set-ActConfigBits $data -Offset 51 -Length 53 -Value 1301332316175003
+```
+
+Payload (hex):
+```text
+02 00 00 00 9A 07 D8 D4 85 53 70 FC 24
+```
+
+#### Step 6: Convert to Base64 and build string
+
+```powershell
+$b64 = [Convert]::ToBase64String($data)
+# AgAAAJoH2NSFU3D8JA==
+
+$SkuId = 'df96023b-dcd9-4be2-afa0-c6c871159ebe'
+"msft2009:$SkuId&$b64"
+# msft2009:df96023b-dcd9-4be2-afa0-c6c871159ebe&AgAAAJoH2NSFU3D8JA==
+```
+
+---
+
+**Putting it all together:**
+
+```powershell
+$SkuId    = 'df96023b-dcd9-4be2-afa0-c6c871159ebe'
+$Upgrade  = 0
+$Serial   = 1
+$GroupId  = 3892
+$Security = 1301332316175003
+
+$data = [byte[]]::new(13)
+Set-ActConfigBits $data -Offset 0  -Length 1  -Value $Upgrade
+Set-ActConfigBits $data -Offset 1  -Length 30 -Value $Serial
+Set-ActConfigBits $data -Offset 31 -Length 20 -Value $GroupId
+Set-ActConfigBits $data -Offset 51 -Length 53 -Value $Security
+
+"msft2009:$SkuId&$([Convert]::ToBase64String($data))"
+# Output: msft2009:df96023b-dcd9-4be2-afa0-c6c871159ebe&AgAAAJoH2NSFU3D8JA==
+```
+
+---
+
+### PKey2005 encoding
+
+Example from product key `RHTBY-VWY6D-QJRJ9-JGQ3X-Q2289` (Windows 7 Ultimate Retail):
+
+| Parameter | Value |
+| :--- | :--- |
+| SKU GUID (Activation ID) | `a0cde89c-3304-4157-b61c-c8ad785d1fad` |
+| Upgrade | `0` |
+| Serial (Key ID) | `69673552` |
+| Security | `847` |
+
+PKey2005 uses the same encoding process as PKey2009, but with a 12-byte array instead of 13, and without the Group ID field.
+
+The process is identical: create an empty byte array, use `Set-ActConfigBits` to write each field at its bit offset, encode to Base64, and combine with the SKU GUID.
+
+Packed payload (hex):
+```text
+A0 44 4E 88 A7 01 00 00 00 00 00 00
+```
+
+Base64:
+```text
+oEROiKcBAAAAAAAA
+```
+
+ActConfigId:
+```text
+msft2005:a0cde89c-3304-4157-b61c-c8ad785d1fad&oEROiKcBAAAAAAAA
+```
+
+---
+
+**Putting it all together:**
+
+```powershell
+$SkuId = 'a0cde89c-3304-4157-b61c-c8ad785d1fad'
+$data = [byte[]]::new(12)
+Set-ActConfigBits $data -Offset 0  -Length 1  -Value 0          # Upgrade
+Set-ActConfigBits $data -Offset 1  -Length 30 -Value 69673552   # Serial
+Set-ActConfigBits $data -Offset 31 -Length 20 -Value 847        # Security
+
+"msft2005:$SkuId&$([Convert]::ToBase64String($data))"
+# Output: msft2005:a0cde89c-3304-4157-b61c-c8ad785d1fad&oEROiKcBAAAAAAAA
+```
+
+---
+
+## Decoding ActConfigId
+
+Decoding extracts the SKU GUID and the packed fields from an ActConfigId string.
+
+### PKey2009 decoding
+
+Example from product key `NJCF7-PW8QT-3324D-688JX-2YV66` (Windows Server Next Beta ServerRdsh Retail):
+
+Input string:
+```
+msft2009:df96023b-dcd9-4be2-afa0-c6c871159ebe&AgAAAJoH2NSFU3D8JA==
+```
+
+#### Step 1: Parse SKU GUID and Base64 payload
+
+```powershell
+$actConfigId = 'msft2009:df96023b-dcd9-4be2-afa0-c6c871159ebe&AgAAAJoH2NSFU3D8JA=='
+$parts = $actConfigId.Split('&')
+
+$skuGuid = $parts[0].Replace('msft2009:', '')
+$base64  = $parts[1]
+```
+
+#### Step 2: Decode Base64 to bytes
+
+```powershell
+$data = [Convert]::FromBase64String($base64)
+```
+
+Raw bytes (13 bytes):
+```text
+02 00 00 00 9A 07 D8 D4 85 53 70 FC 24
+```
+
+#### Step 3: Extract fields
+
+```powershell
+$upgrade  = Get-ActConfigBits $data -Offset 0  -Length 1   # 0
+$serial   = Get-ActConfigBits $data -Offset 1  -Length 30  # 1
+$groupId  = Get-ActConfigBits $data -Offset 31 -Length 20  # 3892
+$security = Get-ActConfigBits $data -Offset 51 -Length 53  # 1301332316175003
+```
+
+---
+
+**Putting it all together:**
+
+```powershell
+$actConfigId = 'msft2009:df96023b-dcd9-4be2-afa0-c6c871159ebe&AgAAAJoH2NSFU3D8JA=='
+$parts = $actConfigId.Split('&')
+
+$skuGuid = $parts[0].Replace('msft2009:', '')
+$data    = [Convert]::FromBase64String($parts[1])
+
+[PSCustomObject]@{
+    Algorithm = 'PKey2009'
+    SkuId     = $skuGuid
+    Upgrade   = Get-ActConfigBits $data -Offset 0  -Length 1
+    Serial    = Get-ActConfigBits $data -Offset 1  -Length 30
+    GroupId   = Get-ActConfigBits $data -Offset 31 -Length 20
+    Security  = Get-ActConfigBits $data -Offset 51 -Length 53
+}
+```
+
+Output:
+
+```text
+Algorithm : PKey2009
+SkuId     : df96023b-dcd9-4be2-afa0-c6c871159ebe
+Upgrade   : 0
+Serial    : 1
+GroupId   : 3892
+Security  : 1301332316175003
+```
+
+---
+
+### PKey2005 decoding
+
+Example from product key `RHTBY-VWY6D-QJRJ9-JGQ3X-Q2289` (Windows 7 Ultimate Retail):
+
+Input string:
+```
+msft2005:a0cde89c-3304-4157-b61c-c8ad785d1fad&oEROiKcBAAAAAAAA
+```
+
+**Putting it all together:**
+
+```powershell
+$actConfigId = 'msft2005:a0cde89c-3304-4157-b61c-c8ad785d1fad&oEROiKcBAAAAAAAA'
+$parts = $actConfigId.Split('&')
+
+$skuGuid = $parts[0].Replace('msft2005:', '')
+$data    = [Convert]::FromBase64String($parts[1])
+
+[PSCustomObject]@{
+    Algorithm = 'PKey2005'
+    SkuId     = $skuGuid
+    Upgrade   = Get-ActConfigBits $data -Offset 0  -Length 1
+    Serial    = Get-ActConfigBits $data -Offset 1  -Length 30
+    Security  = Get-ActConfigBits $data -Offset 31 -Length 20
+}
+```
+
+Output:
+
+```text
+Algorithm : PKey2005
+SkuId     : a0cde89c-3304-4157-b61c-c8ad785d1fad
+Upgrade   : 0
+Serial    : 69673552
+Security  : 847
+```
+
+---
+
+## Feedback / Troubleshooting
+
+- Check [here](/troubleshoot).

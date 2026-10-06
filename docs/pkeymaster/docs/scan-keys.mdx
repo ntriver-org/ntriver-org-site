@@ -8,7 +8,7 @@ slug: /pkeymaster/scan-keys
 ## Overview
 
 - **How to use it?** Instructions can be found [here](/pkeymaster).
-- The Scan Keys option recovers product keys from various sources on the system, including files, the Windows registry, Digital Product ID blobs, the SPP trusted store, and the BIOS/UEFI (MSDM).
+- The Scan Keys option recovers product keys from various sources on the system, including files, the Windows registry, Digital Product ID blobs, the SPP/OSPP trusted store, and the BIOS/UEFI (MSDM).
 - Each scan method targets a different source and can be used independently.
 
 ---
@@ -246,36 +246,46 @@ SHA256 Check      : Pass
 
 ## Get Installed Windows/Office Keys
 
-Decrypts the Windows SPP (Software Protection Platform) trusted store (`data.dat`) and scans it for installed product keys. Found keys are matched against the local `SoftwareLicensingProduct` WMI class to display the product name, description, key type, and Installation ID.
+Decrypts the Windows SPP and OSPP trusted store and scans it for installed product keys. Found keys are matched against the local WMI class to display the product name, description, key type, and Installation ID.
 
 Keys no longer associated with an installed product are shown separately as **Previously Installed Keys**.
 
-- Supports Windows Vista and later.
+- Supports Windows (Vista and later) and Office (2010 and later).
 - If the store file is locked by the Software licensing service, the script stops the service to read it. Administrator rights are required in this case.
 
 ### Example
 
 ```
+________________________________________
+
 Checking keys in SPP trusted store...
+________________________________________
 
 Product Name      : Office 16, Office16MondoR_OEM_Perp edition
 Description       : Office 16, RETAIL channel
 Key Type          : OEM:NONSLP
-Installation ID   : 752804166567828166154573522367217561535424918724163927860591361
-Installed Key     : 6TMRB-NYFW4-9VK2Y-YKDDG-BP2M6
+Installation ID   : 690018648344652347022687592328952864125851048207685809704482246
+Installed Key     : KJ3DB-VNXVJ-GJG94-9RYX6-Y98Y6
 
 Product Name      : Windows(R), Professional edition
-Description       : Windows(R) Operating System, RETAIL channel
-Key Type          : Retail
-Installation ID   : 557969165034752027240484652354807822964740878125235215954221282
-Installed Key     : VK7JG-NPHTM-C97JM-9MPGT-3V66T
+Description       : Windows(R) Operating System, OEM_DM channel
+Key Type          : OEM:DM
+Installation ID   : 690018648344652347022687592328952864125851048207685809704482246
+Installed Key     : B7RFY-7NXPK-Q4342-2B37J-BWRTH
 
 Previously Installed Keys:
-Y9NF9-M2QWD-FF6RJ-QJW36-RRF2T
 HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
-HGRBX-N68QF-6DY8J-6CBKW-TQ74T
-G8NDV-TDMHJ-WGC9R-9GWB8-JFG8G
-CQ29N-CDF7F-G23Y9-BY4F8-YP2M6
+B2HTN-JPH8C-J6Y6W-8YW3B-G3BRT
+VK7JG-NPHTM-C97JM-9MPGT-3V66T
+________________________________________
+
+Checking keys in OSPP trusted store...
+________________________________________
+
+Product Name      : Office 14, OfficeProPlus-KMS_Client edition
+Description       : Office 14, VOLUME_KMSCLIENT channel
+Installation ID   : 005811612886986190878094440950763771119326145482653636
+Installed Key     : VYBBJ-TRJPB-QFQRF-QFT4D-H3GVB
 ```
 
 :::tip
