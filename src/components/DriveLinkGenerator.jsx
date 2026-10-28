@@ -108,7 +108,14 @@ export default function DriveLinkGenerator() {
       try {
         const response = await fetch(
           `https://ntriver.org/api/drive/generate-link?filename=${encodeURIComponent(extractedFilename)}`,
-          { signal: controller.signal }
+          {
+            signal: controller.signal,
+            headers: {
+              ...(typeof document !== 'undefined' && document.referrer
+                ? { 'X-Original-Referrer': document.referrer }
+                : {}),
+            },
+          }
         );
 
         const data = await response.json().catch(() => null);
