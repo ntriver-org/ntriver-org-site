@@ -111,9 +111,10 @@ export default function DriveLinkGenerator() {
           {
             signal: controller.signal,
             headers: {
-              ...(typeof document !== 'undefined' && document.referrer
-                ? { 'X-Original-Referrer': document.referrer }
-                : {}),
+              'X-Original-Referrer':
+                typeof document !== 'undefined' && document.referrer
+                  ? document.referrer
+                  : 'https://ntriver.org/',
             },
           }
         );
