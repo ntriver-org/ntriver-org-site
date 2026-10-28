@@ -114,7 +114,7 @@ export default function DriveLinkGenerator() {
               'X-Original-Referrer':
                 typeof document !== 'undefined' && document.referrer
                   ? document.referrer
-                  : 'https://ntriver.org/',
+                  : 'direct',
             },
           }
         );
